@@ -233,7 +233,7 @@ function login_restricted($user_level_required)
 
   if (isset($_COOKIE['session_ID']))
   {
-    $login_query = $db_connection->query("SELECT `members`.`user_level` FROM `members` LEFT JOIN `logins_sessions` ON `members`.`ID`=`logins_sessions`.`member_ID` WHERE `logins_sessions`.`ID`='".$_COOKIE["session_ID"]."' LIMIT 1");
+    $login_query = $db_connection->query("SELECT `logins`.`user_level` FROM `logins` LEFT JOIN `logins_sessions` ON `logins`.`ID`=`logins_sessions`.`login_ID` WHERE `logins_sessions`.`ID`='".$_COOKIE["session_ID"]."' LIMIT 1");
 
     if ($login_query->num_rows == 0)
     {
