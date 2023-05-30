@@ -4,8 +4,42 @@
 <?php
 	$status = 5;
 
-	function output_booking($status, $ensemble_name, $ensemble_logo, $keiron_logo, $booking_date, $booking_location, $first_created, $last_updated)
+	function output_booking($booking, $db_connection)
 	{
+    // TODO: I know this is terrible programming. Please shoot me.
+    $keiron_logo = "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg";
+
+    $booking_datetime = new DateTime();
+    $booking_datetime->setTimestamp($booking["datetime"]);
+    $booking_datetime->setTimezone(new DateTimeZone("Europe/London"));
+
+    $status = $booking["status"];
+    $booking_date = $booking_datetime->format("l, jS F Y");
+    $booking_location = $booking["location"];
+    $last_updated = FindTimeAgo($booking["updated_datetime"]);
+
+    $ensemble_query = $db_connection->prepare("SELECT `name`, `logo` FROM logins WHERE id = ?;");
+    $ensemble_query->bind_param("i", $booking["booking_ensemble"]);
+    $ensemble_query->execute();
+    $ensemble = $ensemble_query->get_result()->fetch_assoc();
+    $ensemble_name = $ensemble["name"];
+    $ensemble_logo = $ensemble["logo"];
+
+    $first_status_query = $db_connection->prepare("SELECT a.* FROM `bookings` a INNER JOIN (SELECT `booking_ID`, min(`status`) `status` FROM `bookings` WHERE `deleted`=0 GROUP BY `booking_ID`) b USING(`booking_ID`, `status`) ORDER BY `status` ASC LIMIT 1");
+    $first_status_query->execute();
+    $first_created_result = $first_status_query->get_result()->fetch_assoc()["updated_datetime"];
+
+    $first_created_datetime = new DateTime();
+    $first_created_datetime->setTimestamp($first_created_result);
+    $first_created_datetime->setTimezone(new DateTimeZone("Europe/London"));
+    $first_created = $first_created_datetime->format("Y-m-d H:i:s");
+
+    // $first_created = "2020-12-01";
+
+    // $ensemble_name = "NSWO";
+    // $ensemble_logo = "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg";
+
+    // Items dependend on status.
 		$status_responses = [
 			0 => "Ensemble created booking",
 			1 => "Ensemble submitted booking to Keiron",
@@ -76,11 +110,10 @@
 			3 => "opacity-100",
 			4 => "opacity-100",
 			5 => "opacity-100"
-		]
-		
+    ];
 
 		?>
-		<tr>
+		<tr class="<?=booking_viewable($booking["booking_ensemble"])?"opacity-100":"opacity-50";?>">
 			<td>
 				<span class="avatar"
 					style="background-image: url('<?=$ensemble_logo;?>')"
@@ -124,6 +157,21 @@
 					<?=$waiting_for[$status];?>
 				</span>
 			</td>
+      <td>
+        <?php
+          if (booking_restricted($booking["booking_ensemble"], $booking["status"]))
+          {
+            ?>
+            <a href="#" class="btn btn-success w-40">Accept</a>
+            <a href="#" class="btn btn-danger w-40">Decline</a>
+            <?php
+          }
+          else
+          {
+            echo "-";
+          }
+        ?>
+      </td>
 		</tr>
 		<?php
 	}
@@ -183,8 +231,8 @@ if (login_valid())
                 </div>
 
                 <div class="table-responsive" id="main-content" style="display: block;">
-                  <form id="update_attendance">
-                    <table id="attendance-table" class="table card-table table-vcenter text-nowrap datatable">
+                  <form id="update_bookings">
+                    <table id="bookings-table" class="table card-table table-vcenter text-nowrap datatable">
                       <thead>
                         <tr>
                           <th class="sticky-top">
@@ -208,17 +256,31 @@ if (login_valid())
 													<th class="sticky-top">
                             Waiting for
                           </th>
+                          <th class="sticky-top">
+                            Action
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
 
 												<?php
-													output_booking(0, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													output_booking(1, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													output_booking(2, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													output_booking(3, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													output_booking(4, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													output_booking(5, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
+                          $all_bookings_query = $db_connection->prepare("SELECT a.* FROM `bookings` a INNER JOIN (SELECT `booking_ID`, max(`status`) `status` FROM `bookings` WHERE `deleted`=0 GROUP BY `booking_ID`) b USING(`booking_ID`, `status`) ORDER BY `datetime` DESC");
+                          $all_bookings_query->execute();
+                          $all_bookings_result = $all_bookings_query->get_result();
+
+                          while($booking = $all_bookings_result->fetch_array(MYSQLI_ASSOC))
+                          {
+                            output_booking($booking, $db_connection);
+                          }
+                          
+
+
+													// output_booking(0, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
+													// output_booking(1, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
+													// output_booking(2, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
+													// output_booking(3, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
+													// output_booking(4, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
+													// output_booking(5, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
 												?>
 
                       </tbody>

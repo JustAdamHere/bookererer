@@ -225,6 +225,31 @@ function login_valid()
   }
 }
 
+function get_user_level_and_id()
+{
+  if (login_valid())
+  {
+    require_once($_SERVER['DOCUMENT_ROOT']."/includes/db_connect.php");
+
+    $db_connection = db_connect();
+
+    $login_query = $db_connection->query("SELECT `logins`.`user_level`, `logins`.`ID` FROM `logins` LEFT JOIN `logins_sessions` ON `logins`.`ID`=`logins_sessions`.`login_ID` WHERE `logins_sessions`.`ID`='".$_COOKIE["session_ID"]."' LIMIT 1");
+
+    if ($login_query->num_rows == 1)
+    {
+      $login = $login_query->fetch_assoc();
+
+      return array('user_level' => $login['user_level'], 'user_id' => $login['ID']);
+    }
+
+    db_disconnect($db_connection);
+  }
+  else
+  {
+    return false;
+  }
+}
+
 function login_restricted($user_level_required)
 {
   require_once($_SERVER['DOCUMENT_ROOT']."/includes/db_connect.php");
@@ -263,6 +288,87 @@ function login_restricted($user_level_required)
   }
 
   db_disconnect($db_connection);
+}
+
+// Returns true if you're able to INTERACT with this booking.
+function booking_restricted($booking_ensemble, $status)
+{
+  // $current_user_level
+  //  1: Ensemble
+  //  2: Keiron
+  //  3: Admin
+  $user_level_and_id = get_user_level_and_id();
+  if ($user_level_and_id)
+  {
+    $current_user_level = $user_level_and_id['user_level'];
+    $current_user_id = $user_level_and_id['user_id'];
+  }
+  else
+  {
+    return false;
+  }
+
+  // See everything.
+  if ($current_user_level == 3)
+  {
+    return true;
+  }
+  elseif ($current_user_level == 2 && $status == 1)
+  {
+    return true;
+  }
+  elseif ($current_user_level == 1 && $current_user_id == $booking_ensemble)
+  {
+    if ($status == 0 || $status == 3)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else
+  {
+    return false;
+  }
+}
+
+// Returns true if you're able to VIEW this booking.
+function booking_viewable($booking_ensemble)
+{
+  // $current_user_level
+  //  1: Ensemble
+  //  2: Keiron
+  //  3: Admin
+  $user_level_and_id = get_user_level_and_id();
+  if ($user_level_and_id)
+  {
+    $current_user_level = $user_level_and_id['user_level'];
+    $current_user_id = $user_level_and_id['user_id'];
+  }
+  else
+  {
+    return false;
+  }
+
+  // See everything.
+  if ($current_user_level == 3)
+  {
+    return true;
+  }
+  elseif ($current_user_level == 2)
+  {
+    return true;
+  }
+  elseif ($current_user_level == 1 && $current_user_id == $booking_ensemble)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 // Courtesy of: https://www.idiotinside.com/2015/03/29/convert-timestamp-to-relative-time-in-php/
