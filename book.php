@@ -2,7 +2,33 @@
 <?php $db_connection = db_connect(); ?>
 
 <?php
-	$status = 5;
+	$sort_options = [
+    "datetime" => "Date",
+    "ensemble" => "Ensemble",
+    "name" => "Name",
+    "location" => "Location",
+    "status" => "Status"
+  ];
+
+  $sort_directions = [
+    "DESC" => "Desc.",
+    "ASC" => "Asc."
+  ];
+
+  $sort  = isset($_GET["sort"]) ?htmlspecialchars($_GET["sort"]) :$sort_options[0];
+  $order = isset($_GET["order"])?htmlspecialchars($_GET["order"]):$sort_directions[0];
+
+  if (!in_array($sort, array_keys($sort_options)))
+  {
+    $sort = array_keys($sort_options)[0];
+  }
+  if (!in_array($order, array_keys($sort_directions)))
+  {
+    $order = array_keys($sort_directions)[0];
+  }
+?>
+
+<?php
 
 	function output_booking($booking, $db_connection)
 	{
@@ -13,6 +39,8 @@
     $booking_datetime->setTimestamp($booking["datetime"]);
     $booking_datetime->setTimezone(new DateTimeZone("Europe/London"));
 
+    $booking_id = $booking["booking_ID"];
+    $booking_name = $booking["name"];
     $status = $booking["status"];
     $booking_date = $booking_datetime->format("l, jS F Y");
     $booking_location = $booking["location"];
@@ -112,23 +140,63 @@
 			5 => "opacity-100"
     ];
 
+    $green_option = [
+      "",
+      "Accept",
+      "",
+      "",
+      "",
+      ""
+    ];
+
+    $red_option = [
+      "",
+      "Decline",
+      "",
+      "",
+      "",
+      ""
+    ];
+
+    $blue_option = [
+      "Submit to Keiron",
+      "",
+      "",
+      "Confirm final details",
+      "",
+      ""
+    ];
+
 		?>
 		<tr class="<?=booking_viewable($booking["booking_ensemble"])?"opacity-100":"opacity-50";?>">
+      <td>
+        <?php 
+          if (booking_restricted($booking["booking_ensemble"], $booking["status"]) && !($green_option[$status] == "" && $red_option[$status] == "" && $blue_option[$status] == ""))
+          {
+            ?>
+            <div class="badge bg-primary" title="Status code: <?=$status;?>"></div>
+            <?php
+          }
+        ?>
+      </td>
 			<td>
 				<span class="avatar"
 					style="background-image: url('<?=$ensemble_logo;?>')"
 					title="<?=$ensemble_name;?>"></span>
 			</td>
+      <td>
+				<?=$booking_name;?>
+			</td>
 			<td>
 				<?=$booking_date;?>
 				<div class="mt-n1">
-					<a href="">Add to calendar</a>
+					<a href="#" data-bs-toggle="modal" data-bs-target="#add-to-calendar_<?=$booking_id;?>">Add to calendar</a>
 				</div>
 			</td>
 			<td>
 				<?=$booking_location;?>
 				<div class="mt-n1">
-					<a href="">Get directions</a>
+					<a href="https://www.google.com/maps/dir/?api=1&destination=<?=urlencode($booking_location);?>" target="_blank">Get directions</a>
 				</div>
 			</td>
 			<td>
@@ -161,10 +229,34 @@
         <?php
           if (booking_restricted($booking["booking_ensemble"], $booking["status"]))
           {
-            ?>
-            <a href="#" class="btn btn-success w-40">Accept</a>
-            <a href="#" class="btn btn-danger w-40">Decline</a>
-            <?php
+            if ($green_option[$status] != "")
+            {
+              ?>
+              <a href="#" class="btn btn-success w-40"><?=$green_option[$status];?></a>
+              <?php
+            }
+
+            if ($red_option[$status] != "")
+            {
+              ?>
+              <a href="#" class="btn btn-danger w-40"><?=$red_option[$status];?></a>
+              <?php
+            }
+
+            if ($blue_option[$status] != "")
+            {
+              ?>
+              <a href="#" class="btn btn-primary w-40"><?=$blue_option[$status];?></a>
+              <?php
+            }
+
+            if ($green_option[$status] == "" && $red_option[$status] == "" && $blue_option[$status] == "")
+            {
+              ?>
+              <span class="text-muted">-</span>
+              <?php
+            }
+            
           }
           else
           {
@@ -173,6 +265,52 @@
         ?>
       </td>
 		</tr>
+
+    <?php
+      $booking_datetime_utc = new DateTime("now", new DateTimeZone("Europe/London"));
+      $booking_datetime_utc->setTimestamp($booking["booking_datetime"]);
+      $booking_datetime_utc->setTimezone(new DateTimeZone("UTC"));
+
+      $booking_datetime_end_utc = new DateTime("now", new DateTimeZone("Europe/London"));
+      $booking_datetime_end_utc->setTimestamp($booking["booking_datetime"]);
+      $booking_datetime_end_utc->setTimezone(new DateTimeZone("UTC"));
+      $booking_datetime_end_utc->add(new DateInterval("PT180M"));
+    ?>
+
+    <div class="modal modal-blur fade" id="add-to-calendar_<?=$booking_id;?>" tabindex="-1" style="display: none;" aria-hidden="true">
+      <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="modal-title">Add to calendar</div>
+            <div class="row g-2 align-items-center">
+              <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                <a target="_blank" href="https://calendar.google.com/calendar/render?action=TEMPLATE&dates=<?=$booking_datetime_utc->format("Ymd\THisZ");?>%2F<?=$booking_datetime_end_utc->format("Ymd\THisZ");?>&details=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&location=<?=urlencode($booking["location"]);?>&text=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon" aria-label="Google Calendar" style="color: #ffffff; background-color: #3f7ee8;" onclick="$('#add-to-calendar_<?=$booking_id;?>').modal('hide')">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-google" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M17.788 5.108a9 9 0 1 0 3.212 6.892h-8"></path></svg>
+                </a>
+              </div>
+              <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                <a target="_blank" href="https://outlook.live.com/calendar/0/deeplink/compose?body=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&enddt=<?=urlencode($booking_datetime_end_utc->format("Y-m-d\TH:i:s+00:00"));?>&location=<?=urlencode($booking["location"]);?>&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=<?=urlencode($booking_datetime_utc->format("Y-m-d\TH:i:s+00:00"));?>&subject=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon disabled" aria-label="Outlook" style="color: #ffffff; background-color: #1175cc;">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mail" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"></path><path d="M3 7l9 6l9 -6"></path></svg>
+                </a>
+              </div>
+              <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                <a target="_blank" href="https://calendar.yahoo.com/?desc=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&et=<?=urlencode($booking_datetime_end_utc->format("ymd\THisZ"));?>&in_loc=<?=urlencode($booking["location"]);?>&st=<?=urlencode($booking_datetime_utc->format("ymd\THisZ"));?>&title=<?=urlencode($booking["name"]);?>&v=60" class="btn w-100 btn-icon disabled" aria-label="Yahoo" style="color: #ffffff; background-color: #5b00c8;">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-yahoo" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 6l5 0"></path><path d="M7 18l7 0"></path><path d="M4.5 6l5.5 7v5"></path><path d="M10 13l6 -5"></path><path d="M12.5 8l5 0"></path><path d="M20 11l0 4"></path><path d="M20 18l0 .01"></path></svg>
+                </a>
+              </div>
+              <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                <a target="_blank" href="https://outlook.office.com/calendar/0/deeplink/compose?body=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&enddt=<?=urlencode($booking_datetime_end_utc->format("Y-m-d\TH:i:s+00:00"));?>&location=<?=urlencode($booking["location"]);?>&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=<?=urlencode($booking_datetime_utc->format("Y-m-d\TH:i:s+00:00"));?>&subject=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon disabled" aria-label="Office365" style="color: #ffffff; background-color: #cc3802;">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-office" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 18h9v-12l-5 2v5l-4 2v-8l9 -4l7 2v13l-7 3z"></path></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 		<?php
 	}
 ?>
@@ -207,21 +345,28 @@ if (login_valid())
               <div class="card-body border-bottom py-3 col-form-label">
                 <div class="ms-auto text-muted">
                   <form method="get" action="" id="form-sort">
-                    <input type="hidden" name="theme" value="" form="form-sort">
-                    <input type="hidden" name="ensemble_ID" value="" form="form-sort">
-                    <input type="hidden" name="term_ID" value="" form="form-sort">
                     <div class="ms-2 d-inline-block">
-                      <select class="form-select" name="sortby" form="form-sort">
-                        <option value="first_name">First name</option>
-                        <option value="last_name" selected="">Last name</option>
-                        <option value="instrument">Instrument</option>
-                        <option value="setup_group">Setup group</option>
+                      <select class="form-select" name="sort" form="form-sort">
+                        <?php
+                          foreach ($sort_options as $value => $text)
+                          {
+                            ?>
+                            <option value="<?=$value;?>" <?php if ($value == $sort) { echo "selected"; } ?>><?=$text;?></option>
+                            <?php
+                          }
+                        ?>
                       </select>
                     </div>
                     <div class="ms-2 d-inline-block">
-                      <select class="form-select" name="sortdir" form="form-sort">
-                        <option value="ASC" selected="">Asc.</option>
-                        <option value="DESC">Desc.</option>
+                      <select class="form-select" name="order" form="form-sort">
+                        <?php
+                          foreach ($sort_directions as $value => $text)
+                          {
+                            ?>
+                            <option value="<?=$value;?>" <?php if ($value == $order) { echo "selected"; } ?>><?=$text;?></option>
+                            <?php
+                          }
+                        ?>
                       </select>
                     </div>
                     <div class="ms-2 d-inline-block">
@@ -236,7 +381,13 @@ if (login_valid())
                       <thead>
                         <tr>
                           <th class="sticky-top">
+                            
+                          </th>
+                          <th class="sticky-top">
                             Ensemble
+                          </th>
+                          <th class="sticky-top">
+                            Name
                           </th>
                           <th class="sticky-top">
                             Concert date
@@ -264,7 +415,7 @@ if (login_valid())
                       <tbody>
 
 												<?php
-                          $all_bookings_query = $db_connection->prepare("SELECT a.* FROM `bookings` a INNER JOIN (SELECT `booking_ID`, max(`status`) `status` FROM `bookings` WHERE `deleted`=0 GROUP BY `booking_ID`) b USING(`booking_ID`, `status`) ORDER BY `datetime` DESC");
+                          $all_bookings_query = $db_connection->prepare("SELECT a.* FROM `bookings` a INNER JOIN (SELECT `booking_ID`, max(`status`) `status` FROM `bookings` WHERE `deleted`=0 GROUP BY `booking_ID`) b USING(`booking_ID`, `status`) ORDER BY `".$sort."` ".$order);
                           $all_bookings_query->execute();
                           $all_bookings_result = $all_bookings_query->get_result();
 
@@ -272,15 +423,6 @@ if (login_valid())
                           {
                             output_booking($booking, $db_connection);
                           }
-                          
-
-
-													// output_booking(0, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													// output_booking(1, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													// output_booking(2, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													// output_booking(3, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													// output_booking(4, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
-													// output_booking(5, "Nottingham Symphonic Windws", "https://attendance.nsw.org.uk/uploads/ensemble-logos/nswo/NSWO%20social%20icon%20RGB-16.jpg", "https://keironanderson.co.uk/wp-content/uploads/2020/09/keiron_anderson_24_feb.jpg", "Saturday 7th October 2023, 19:30", "St John's Church, NG7 2RD", "1 week ago", "about 1 minute ago");
 												?>
 
                       </tbody>
