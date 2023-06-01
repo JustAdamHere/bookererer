@@ -372,7 +372,74 @@ if (login_valid())
                     <div class="ms-2 d-inline-block">
                       <button type="submit" class="btn btn-warning ms-auto my-2">Change sort</button>
                     </div>
+                    <!-- Align right button. -->
+                    <div class="mr-0 d-inline-block " style="float: right;">
+                      <a href="#" data-bs-toggle="modal" data-bs-target="#add-booking" class="btn btn-primary ms-auto my-2">Add booking</a>
+                    </div>
                   </form>
+                </div>
+
+                <div class="modal modal-blur fade" id="add-booking" tabindex="-1" style="display: none;" aria-hidden="true">
+                  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Add booking</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="mb-3">
+                          <label class="form-label">Booking name</label>
+                          <input type="text" class="form-control" name="booking-name" placeholder="Your booking name">
+                        </div>
+                        <div class="row">
+                          <div class="col-lg-12">
+                            <div class="mb-3">
+                              <label class="form-label">Ensemble</label>
+                              <select class="form-select">
+                                <option value="1">Option 1</option>
+                                <option value="2">Option 2</option>
+                                <option value="3">Option 3</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label class="form-label required">Event date</label>
+                              <div class="input-icon">
+                                <input type="text" name="booking_date" id="booking_date" class="form-control" placeholder="Select a date" value="" style="min-width: 150px;">
+                                <span class="input-icon-addon"><!-- Download SVG icon from http://tabler-icons.io/i/calendar -->
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line><line x1="11" y1="15" x2="12" y2="15"></line><line x1="12" y1="15" x2="12" y2="18"></line></svg>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-lg-6">
+                            <div class="mb-3">
+                              <label class="form-label required">Event time</label>
+                              <input type="time" name="booking_time" id="booking_time" class="form-control" autocomplete="off" value="" required>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-lg-12">
+                            <input type="text" name="location" id="location" class="form-control" placeholder="Location" value="">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                          Cancel
+                        </a>
+                        <a href="#" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                          <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>
+                          Create draft new booking
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="table-responsive" id="main-content" style="display: block;">
@@ -543,6 +610,23 @@ if (login_valid())
     <?php include($_SERVER['DOCUMENT_ROOT']."/includes/footer.php"); ?>
 
     <script src="<?=$config['base_url'];?>/dist/js/tabler.min.js"></script>
+    <script src="./dist/libs/list.js/dist/list.min.js"></script>
+    <script src="./dist/libs/litepicker/dist/litepicker.js"></script>
+    <script>
+      // @formatter:off
+      document.addEventListener("DOMContentLoaded", function() {
+        window.Litepicker && (new Litepicker({
+          element: document.getElementById('booking_date'),
+          buttonText: {
+            previousMonth: `<!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="15 6 9 12 15 18" /></svg>`,
+            nextMonth: `<!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="9 6 15 12 9 18" /></svg>`,
+          },
+        }));
+      });
+      // @formatter:on
+    </script>
 </body>
 
 </html>
