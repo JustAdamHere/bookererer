@@ -327,6 +327,24 @@ if (login_valid())
   <meta name="robots" content="noindex,nofollow">
   <title><?=$title;?></title>
   <script>
+    var bookingFormSubmitText = [];
+    bookingFormSubmitText[-1] = "Create draft booking";
+    bookingFormSubmitText[0]  = "Send booking to Keiron";
+    bookingFormSubmitText[1]  = "";
+    bookingFormSubmitText[2]  = "";
+    bookingFormSubmitText[3]  = "Confirm final details";
+    bookingFormSubmitText[4]  = "";
+    bookingFormSubmitText[5]  = "";
+
+    var bookingFormSubmitIcon = [];
+    bookingFormSubmitIcon[-1] = '<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>';
+    bookingFormSubmitIcon[0]  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-send" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14l11 -11"></path><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"></path></svg>';
+    bookingFormSubmitIcon[1]  = "";
+    bookingFormSubmitIcon[2]  = "";
+    bookingFormSubmitIcon[3]  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-checks" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 12l5 5l10 -10"></path><path d="M2 12l5 5m5 -5l5 -5"></path></svg>';
+    bookingFormSubmitIcon[4]  = "";
+    bookingFormSubmitIcon[5]  = "";
+
     function addNewBooking()
     {
       document.getElementById("submit-add-booking").innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Creating...';
@@ -422,10 +440,25 @@ if (login_valid())
     function setToNewBooking() {
       document.getElementById("booking-id")    .value = 'not yet created';
       document.getElementById("booking-status").value = 0;
+      document.getElementById("booking-date")  .value = '';
+      document.getElementById("booking-time")  .value = '';
+      document.getElementById("booking-name")  .value = '';
+      document.getElementById("location")      .value = '';
+
+      document.getElementById("submit-add-booking").classList.remove("disabled");
+      document.getElementById("submit-add-booking").classList.remove("btn-success");
+      document.getElementById("submit-add-booking").classList.add("btn-primary");
+
+      document.getElementById("submit-add-booking").innerHTML = bookingFormSubmitIcon[-1] + bookingFormSubmitText[-1];
     }
 
     function loadBooking(booking_id) {
       document.getElementById("booking-id").value = booking_id;
+
+      // CODE TO LOAD IN THE BOOKING.
+      var status = 0;
+
+      document.getElementById("submit-add-booking").innerHTML = bookingFormSubmitIcon[status] + bookingFormSubmitText[status];
     }
   </script>
 </head>

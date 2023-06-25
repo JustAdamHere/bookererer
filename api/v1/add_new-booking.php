@@ -39,8 +39,7 @@
     else
     {
       $JSON_response->status        = "error";
-      //$JSON_response->error_message = "you do not have permission to add new bookings with user level ".$user_details["user_level"];
-      $JSON_response->error_message = $session_id;
+      $JSON_response->error_message = "you do not have permission to add new bookings with user level ".$user_details["user_level"];
     }
   }
   else
