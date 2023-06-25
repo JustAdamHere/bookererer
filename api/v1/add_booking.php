@@ -3,13 +3,10 @@
   $ensemble_id      = $_POST["ensemble-id"];
   $booking_date     = $_POST["booking-date"];
   $booking_time     = $_POST["booking-time"];
-  $booking_location = $_POST["location"];
+  $booking_location = $_POST["booking-location"];
   $session_id       = $_POST["session-id"];
-
-  if (!isset($_POST["status"]))
-  {
-    $status = 0;
-  }
+  $booking_id       = $_POST["booking-id"];
+  $booking_status   = $_POST["booking-status"];
 
   $JSON_response = new stdClass();
 
@@ -28,7 +25,12 @@
 
       $booking_datetime = strtotime($booking_date."T".$booking_time.":00");
 
-      $term_dates_query = $db_connection->query("INSERT INTO `bookings` (`name`, `status`, `booking_ensemble`, `datetime`, `location`, `updated_datetime`, `updated_by`, `deleted`) VALUES ('".$booking_name."', '".$status."', '".$ensemble_id."', '".$booking_datetime."', '".$booking_location."', '".time()."', '".$user_details["login_ID"]."', '0')");
+      if ($booking_id == "not yet created")
+      {
+        $booking_id = $db_connection->query("SELECT `AUTO_INCREMENT` FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'bookererer' AND TABLE_NAME = 'bookings'")->fetch_assoc()["AUTO_INCREMENT"];
+      }
+
+      $term_dates_query = $db_connection->query("INSERT INTO `bookings` (`booking_ID`, `name`, `status`, `booking_ensemble`, `datetime`, `location`, `updated_datetime`, `updated_by`, `deleted`) VALUES ('".$booking_id."', '".$booking_name."', '".($booking_status+1)."', '".$ensemble_id."', '".$booking_datetime."', '".$booking_location."', '".time()."', '".$user_details["login_ID"]."', '0')");
 
       if (!$term_dates_query)
       {

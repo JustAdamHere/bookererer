@@ -246,7 +246,7 @@
             if ($blue_option[$status] != "")
             {
               ?>
-              <a href="#" class="btn btn-primary w-40" data-bs-toggle="modal" data-bs-target="#add-booking" onclick="loadBooking(<?=$booking_id;?>)"><?=$blue_option[$status];?></a>
+              <a href="#" class="btn btn-primary w-40" data-bs-toggle="modal" data-bs-target="#add-booking" onclick="loadBooking(<?=$booking_id;?>, <?=$booking['status'];?>)"><?=$blue_option[$status];?></a>
               <?php
             }
 
@@ -345,7 +345,55 @@ if (login_valid())
     bookingFormSubmitIcon[4]  = "";
     bookingFormSubmitIcon[5]  = "";
 
-    function addNewBooking()
+    function modalUpdate(booking_id, booking_status, booking_date, booking_time, booking_name, location)
+    {
+      document.getElementById("add-booking-error").style.display = "none";
+      document.getElementById("add-booking-error").innerHTML = "";
+
+      document.getElementById("booking-id").value       = booking_id;
+      document.getElementById("booking-status").value   = booking_status;
+      document.getElementById("booking-date").value     = booking_date;
+      document.getElementById("booking-time").value     = booking_time;
+      document.getElementById("booking-name").value     = booking_name;
+      document.getElementById("booking-location").value = location;
+
+      document.getElementById("submit-add-booking").classList.remove("disabled");
+      document.getElementById("submit-add-booking").classList.remove("btn-success");
+      document.getElementById("submit-add-booking").classList.add("btn-primary");
+
+      document.getElementById("submit-add-booking").innerHTML  = bookingFormSubmitIcon[booking_status] + bookingFormSubmitText[booking_status];
+
+      document.getElementById("add-booking-title").innerHTML = bookingFormSubmitText[booking_status];
+
+      document.getElementById("submit-add-booking").disabled = false;
+    }
+
+    function modalSuccess()
+    {
+      document.getElementById("add-booking-error").style.display = "none";
+      document.getElementById("add-booking-error").innerHTML = "";
+
+      document.getElementById("submit-add-booking").classList.remove("btn-primary");
+      document.getElementById("submit-add-booking").classList.add("btn-success");
+      document.getElementById("submit-add-booking").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 12l5 5l10 -10"></path></svg>';
+      document.getElementById("submit-add-booking").innerHTML += 'Created!';
+
+      location.reload();
+    }
+
+    function modalError(status, error_message)
+    {
+      document.getElementById("submit-add-booking").classList.remove("disabled");
+      document.getElementById("submit-add-booking").classList.remove("btn-success");
+      document.getElementById("submit-add-booking").classList.add("btn-primary");
+      document.getElementById("submit-add-booking").innerHTML = bookingFormSubmitIcon[status] + bookingFormSubmitText[status];
+
+      document.getElementById("add-booking-error").style.display = "block";
+      document.getElementById("add-booking-error").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-exclamation-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M12 9v4"></path><path d="M12 16v.01"></path></svg>';
+      document.getElementById("add-booking-error").innerHTML += 'Error: ' + error_message;
+    }
+
+    function submitBooking()
     {
       document.getElementById("submit-add-booking").innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Creating...';
       document.getElementById("submit-add-booking").classList.add("disabled");
@@ -354,18 +402,22 @@ if (login_valid())
 
       var xhttp = new XMLHttpRequest();
 
-      xhttp.open("POST", "<?=$config['base_url'];?>/api/v1/add_new-booking.php", true);
+      xhttp.open("POST", "<?=$config['base_url'];?>/api/v1/add_booking.php", true);
       xhttp.timeout = 5000;
       xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
       xhttp.send(
         "booking-name="  + document.getElementById("booking-name").value +
-        "&ensembe-id="   + document.getElementById("ensemble-id").value + 
+        "&ensemble-id="  + document.getElementById("ensemble-id").value + 
         "&booking-date=" + document.getElementById("booking-date").value +
         "&booking-time=" + document.getElementById("booking-time").value +
-        "&location="     + document.getElementById("location").value +
-        "&session-id="   + document.getElementById("session-id").value
+        "&booking-location="+ document.getElementById("booking-location").value +
+        "&session-id="   + document.getElementById("session-id").value + 
+        "&booking-id="   + document.getElementById("booking-id").value +
+        "&booking-status=" + document.getElementById("booking-status").value
       );
+
+      var status = document.getElementById("booking-status").value;
 
       xhttp.onload = function () {
         try {
@@ -375,90 +427,69 @@ if (login_valid())
         }
 
         if (JSON_response.status == "success") {
-          document.getElementById("add-booking-error").style.display = "none";
-          document.getElementById("add-booking-error").innerHTML = "";
-
-          document.getElementById("submit-add-booking").classList.remove("btn-primary");
-          document.getElementById("submit-add-booking").classList.add("btn-success");
-          document.getElementById("submit-add-booking").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 12l5 5l10 -10"></path></svg>';
-          document.getElementById("submit-add-booking").innerHTML += 'Created!';
-
-          location.reload();
-
+          modalSuccess();
         }
         else {
-          document.getElementById("submit-add-booking").classList.remove("disabled");
-          document.getElementById("submit-add-booking").classList.remove("btn-success");
-          document.getElementById("submit-add-booking").classList.add("btn-primary");
-          document.getElementById("submit-add-booking").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>';
-          document.getElementById("submit-add-booking").innerHTML += 'Create draft booking';
-
-          document.getElementById("add-booking-error").style.display = "block";
-          document.getElementById("add-booking-error").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-exclamation-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M12 9v4"></path><path d="M12 16v.01"></path></svg>';
-          document.getElementById("add-booking-error").innerHTML += 'Error: ' + JSON_response.error_message;
+          modalError(status, JSON_response.error_message);
         }
 
       };
 
       xhttp.onabort = function (e) {
-        document.getElementById("submit-add-booking").classList.remove("disabled");
-        document.getElementById("submit-add-booking").classList.remove("btn-success");
-        document.getElementById("submit-add-booking").classList.add("btn-primary");
-        document.getElementById("submit-add-booking").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>';
-        document.getElementById("submit-add-booking").innerHTML += 'Create draft booking';
-          
-        document.getElementById("add-booking-error").style.display = "block";
-        document.getElementById("add-booking-error").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-triangle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="#f44336" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12.01" y2="8"></line><polyline points="11 12 12 12 12 16 13 16"></polyline></svg>';
-        document.getElementById("add-booking-error").innerHTML += 'Error: Request aborted';
+        modalError(status, "Request aborted.");
       };
 
       xhttp.onerror = function (e) {
-        document.getElementById("submit-add-booking").classList.remove("disabled");
-        document.getElementById("submit-add-booking").classList.remove("btn-success");
-        document.getElementById("submit-add-booking").classList.add("btn-primary");
-        document.getElementById("submit-add-booking").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>';
-        document.getElementById("submit-add-booking").innerHTML += 'Create draft booking';
-          
-        document.getElementById("add-booking-error").style.display = "block";
-        document.getElementById("add-booking-error").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-exclamation-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M12 9v4"></path><path d="M12 16v.01"></path></svg>';
-        document.getElementById("add-booking-error").innerHTML += 'An error occured.';
+        modalError(status, "An unknown error occured.");
       }
 
       xhttp.ontimeout = function (e) {
-        document.getElementById("submit-add-booking").classList.remove("disabled");
-        document.getElementById("submit-add-booking").classList.remove("btn-success");
-        document.getElementById("submit-add-booking").classList.add("btn-primary");
-        document.getElementById("submit-add-booking").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>';
-        document.getElementById("submit-add-booking").innerHTML += 'Create draft booking';
-          
-        document.getElementById("add-booking-error").style.display = "block";
-        document.getElementById("add-booking-error").innerHTML  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-exclamation-circle" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M12 9v4"></path><path d="M12 16v.01"></path></svg>';
-        document.getElementById("add-booking-error").innerHTML += 'Creation timed out.';
+        modalError(status, "Creation timed out.");
       };
     }
 
     function setToNewBooking() {
-      document.getElementById("booking-id")    .value = 'not yet created';
-      document.getElementById("booking-status").value = 0;
-      document.getElementById("booking-date")  .value = '';
-      document.getElementById("booking-time")  .value = '';
-      document.getElementById("booking-name")  .value = '';
-      document.getElementById("location")      .value = '';
-
-      document.getElementById("submit-add-booking").classList.remove("disabled");
-      document.getElementById("submit-add-booking").classList.remove("btn-success");
-      document.getElementById("submit-add-booking").classList.add("btn-primary");
-
-      document.getElementById("submit-add-booking").innerHTML = bookingFormSubmitIcon[-1] + bookingFormSubmitText[-1];
+      modalUpdate('not yet created', -1, '', '', '', '');
     }
 
-    function loadBooking(booking_id) {
-      document.getElementById("booking-id").value = booking_id;
+    function loadBooking(booking_id, status) {
+      session_id = document.getElementById("session-id").value;
 
-      // CODE TO LOAD IN THE BOOKING.
-      var status = 0;
+      var xhttp = new XMLHttpRequest();
 
-      document.getElementById("submit-add-booking").innerHTML = bookingFormSubmitIcon[status] + bookingFormSubmitText[status];
+      xhttp.open("POST", "<?=$config['base_url'];?>/api/v1/get_booking.php", true);
+      xhttp.timeout = 5000;
+      xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+      xhttp.send(
+        "booking-id="  + booking_id + 
+        "&session-id=" + session_id
+      );
+
+      xhttp.onload = function () {
+        try {
+          var JSON_response = JSON.parse(this.responseText); 
+        } catch (error) {
+          var JSON_response = {"status": "error", "error_message": "Invalid JSON response from server."};
+        }
+
+        console.log(JSON_response);
+
+        if (JSON_response.status == "success") {
+          modalUpdate(booking_id, JSON_response.booking_status, JSON_response.booking_date, JSON_response.booking_time, JSON_response.booking_name, JSON_response.booking_location);
+        }
+        else {
+          modalError(status, JSON_response.error_message);
+        }
+      };
+
+      xhttp.onerror = function (e) {
+        modalError(status, "An unknown error occured.");
+      }
+
+      xhttp.ontimeout = function (e) {
+        modalError(status, "Loading timed out. Try again.");
+      };
     }
   </script>
 </head>
@@ -518,7 +549,7 @@ if (login_valid())
                     <div class="modal-content">
                       <form id="form-add-booking">
                         <div class="modal-header">
-                          <h5 class="modal-title">Add booking</h5>
+                          <h5 class="modal-title" id="add-booking-title">Add booking</h5>
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body" id="add-booking-error" style="display:none;">
@@ -582,7 +613,7 @@ if (login_valid())
                           <div class="row">
                             <div class="col-lg-12">
                               <label class="form-label required">Location</label>
-                              <input type="text" name="location" id="location" class="form-control" placeholder="Location" value="" required>
+                              <input type="text" name="booking-location" id="booking-location" class="form-control" placeholder="Location" value="" required>
                             </div>
                           </div>
                         </div>
@@ -590,7 +621,7 @@ if (login_valid())
                           <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
                             Cancel
                           </a>
-                          <button type="button" class="btn btn-primary ms-auto" id="submit-add-booking" onclick="addNewBooking()" disabled>
+                          <button type="button" class="btn btn-primary ms-auto" id="submit-add-booking" onclick="submitBooking()" disabled>
                             <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 5l0 14"></path><path d="M5 12l14 0"></path></svg>
                             Create draft booking
