@@ -53,7 +53,8 @@
     $ensemble_name = $ensemble["name"];
     $ensemble_logo = $ensemble["logo"];
 
-    $first_status_query = $db_connection->prepare("SELECT a.* FROM `bookings` a INNER JOIN (SELECT `booking_ID`, min(`status`) `status` FROM `bookings` WHERE `deleted`=0 GROUP BY `booking_ID`) b USING(`booking_ID`, `status`) ORDER BY `status` ASC LIMIT 1");
+    $first_status_query = $db_connection->prepare("SELECT a.* FROM `bookings` a INNER JOIN (SELECT `booking_ID`, min(`status`) `status` FROM `bookings` WHERE `deleted`=0 GROUP BY `booking_ID`) b USING(`booking_ID`, `status`) WHERE `booking_ID`=? ORDER BY `status` ASC LIMIT 1");
+    $first_status_query->bind_param("i", $booking_id);
     $first_status_query->execute();
     $first_created_result = $first_status_query->get_result()->fetch_assoc()["updated_datetime"];
 
@@ -71,7 +72,7 @@
 		$status_responses = [
 			0 => "Ensemble created booking",
 			1 => "Ensemble submitted booking to Keiron",
-			2 => "Keiron declined booking",
+			2 => "Keiron rejected booking",
 			3 => "Keiron accepted booking",
 			4 => "Ensemble confirmed final details",
 			5 => "Ensemble cancelled booking"
@@ -154,7 +155,7 @@
       "Decline",
       "",
       "",
-      "",
+      "Cancel booking",
       ""
     ];
 
@@ -220,6 +221,11 @@
 					<span class="badge <?=$step_3_colour[$status];?> text-10">3</span>
 				</span>
 			</td>
+      <td>
+        <div class="text-muted mt-nl text-center">
+          <span class="badge bg-orange badge-pill ms-2" style="font-size: 1.2em;"><?=$status;?></span>
+        </div>
+      </td>
 			<td>
 				<span class="text-muted">
 					<?=$waiting_for[$status];?>
@@ -227,26 +233,28 @@
 			</td>
       <td>
         <?php
+          // TODO: Some work to allow ensembles to cancel events.
+          // TODO: Disable the fields when they cancel??
           if (booking_restricted($booking["booking_ensemble"], $booking["status"]))
           {
             if ($green_option[$status] != "")
             {
               ?>
-              <a href="#" class="btn btn-success w-40"><?=$green_option[$status];?></a>
+              <a href="#" class="btn btn-success w-40" data-bs-toggle="modal" data-bs-target="#add-booking" data-bs-backdrop="static" onclick="loadBooking(<?=$booking_id;?>, <?=$booking['status'];?>, 1)"><?=$green_option[$status];?></a>
               <?php
             }
 
             if ($red_option[$status] != "")
             {
               ?>
-              <a href="#" class="btn btn-danger w-40"><?=$red_option[$status];?></a>
+              <a href="#" class="btn btn-danger w-40" data-bs-toggle="modal" data-bs-target="#add-booking" data-bs-backdrop="static" onclick="loadBooking(<?=$booking_id;?>, <?=$booking['status'];?>, 0)"><?=$red_option[$status];?></a>
               <?php
             }
 
             if ($blue_option[$status] != "")
             {
               ?>
-              <a href="#" class="btn btn-primary w-40" data-bs-toggle="modal" data-bs-target="#add-booking" onclick="loadBooking(<?=$booking_id;?>, <?=$booking['status'];?>)"><?=$blue_option[$status];?></a>
+              <a href="#" class="btn btn-primary w-40" data-bs-toggle="modal" data-bs-target="#add-booking" data-bs-backdrop="static" onclick="loadBooking(<?=$booking_id;?>, <?=$booking['status'];?>, -1)"><?=$blue_option[$status];?></a>
               <?php
             }
 
@@ -345,8 +353,16 @@ if (login_valid())
     bookingFormSubmitIcon[4]  = "";
     bookingFormSubmitIcon[5]  = "";
 
-    function modalUpdate(booking_id, booking_status, booking_date, booking_time, booking_name, location)
+    var acceptIcon  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-circle-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M9 12l2 2l4 -4"></path></svg>';
+    var rejectIcon = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-ban" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M5.7 5.7l12.6 12.6"></path></svg>';
+
+    function modalUpdate(booking_id, booking_status, booking_date, booking_time, booking_name, booking_location, booking_ensemble_id, accept_reject)
     {
+      // accept_reject:
+      //  -1: neither
+      //   0: reject
+      //   1: accept
+
       document.getElementById("add-booking-error").style.display = "none";
       document.getElementById("add-booking-error").innerHTML = "";
 
@@ -355,15 +371,72 @@ if (login_valid())
       document.getElementById("booking-date").value     = booking_date;
       document.getElementById("booking-time").value     = booking_time;
       document.getElementById("booking-name").value     = booking_name;
-      document.getElementById("booking-location").value = location;
+      document.getElementById("booking-location").value = booking_location;
+
+      document.getElementById("ensemble-id").value = booking_ensemble_id;
 
       document.getElementById("submit-add-booking").classList.remove("disabled");
-      document.getElementById("submit-add-booking").classList.remove("btn-success");
-      document.getElementById("submit-add-booking").classList.add("btn-primary");
 
-      document.getElementById("submit-add-booking").innerHTML  = bookingFormSubmitIcon[booking_status] + bookingFormSubmitText[booking_status];
+      if (accept_reject == -1)
+      {
+        document.getElementById("submit-add-booking").classList.remove("btn-success");
+        document.getElementById("submit-add-booking").classList.remove("btn-danger");
+        document.getElementById("submit-add-booking").classList.add("btn-primary");
 
-      document.getElementById("add-booking-title").innerHTML = bookingFormSubmitText[booking_status];
+        document.getElementById("add-booking-status").classList.remove("bg-success");
+        document.getElementById("add-booking-status").classList.remove("bg-danger");
+        document.getElementById("add-booking-status").classList.add("bg-primary");
+
+        document.getElementById("submit-add-booking").innerHTML = bookingFormSubmitIcon[booking_status] + bookingFormSubmitText[booking_status];
+        document.getElementById("add-booking-title") .innerHTML = bookingFormSubmitText[booking_status];
+
+        document.getElementById("booking-status-new").value = parseInt(booking_status) + 1;
+      }
+      else if (accept_reject == 0 && booking_status == 1)
+      {
+        document.getElementById("submit-add-booking").classList.remove("btn-success");
+        document.getElementById("submit-add-booking").classList.remove("btn-primary");
+        document.getElementById("submit-add-booking").classList.add("btn-danger");
+        
+        document.getElementById("add-booking-status").classList.remove("bg-success");
+        document.getElementById("add-booking-status").classList.remove("bg-primary");
+        document.getElementById("add-booking-status").classList.add("bg-danger");
+
+        document.getElementById("submit-add-booking").innerHTML = rejectIcon + "Decline booking";
+        document.getElementById("add-booking-title") .innerHTML = "Decline booking";
+
+        document.getElementById("booking-status-new").value = 2;
+      }
+      else if (accept_reject == 0 && booking_status == 4)
+      {
+        document.getElementById("submit-add-booking").classList.remove("btn-success");
+        document.getElementById("submit-add-booking").classList.remove("btn-primary");
+        document.getElementById("submit-add-booking").classList.add("btn-danger");
+        
+        document.getElementById("add-booking-status").classList.remove("bg-success");
+        document.getElementById("add-booking-status").classList.remove("bg-primary");
+        document.getElementById("add-booking-status").classList.add("bg-danger");
+
+        document.getElementById("submit-add-booking").innerHTML = rejectIcon + "Cancel booking";
+        document.getElementById("add-booking-title") .innerHTML = "Cancel booking";
+
+        document.getElementById("booking-status-new").value = 5;
+      }
+      else if (accept_reject == 1)
+      {
+        document.getElementById("submit-add-booking").classList.remove("btn-danger");
+        document.getElementById("submit-add-booking").classList.remove("btn-primary");
+        document.getElementById("submit-add-booking").classList.add("btn-success");
+
+        document.getElementById("add-booking-status").classList.remove("bg-danger");
+        document.getElementById("add-booking-status").classList.remove("bg-primary");
+        document.getElementById("add-booking-status").classList.add("bg-success");
+
+        document.getElementById("submit-add-booking").innerHTML = acceptIcon + "Accept booking";
+        document.getElementById("add-booking-title") .innerHTML = "Accept booking";
+
+        document.getElementById("booking-status-new").value = 3;        
+      }
 
       document.getElementById("submit-add-booking").disabled = false;
     }
@@ -407,14 +480,15 @@ if (login_valid())
       xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
       xhttp.send(
-        "booking-name="  + document.getElementById("booking-name").value +
-        "&ensemble-id="  + document.getElementById("ensemble-id").value + 
-        "&booking-date=" + document.getElementById("booking-date").value +
-        "&booking-time=" + document.getElementById("booking-time").value +
-        "&booking-location="+ document.getElementById("booking-location").value +
-        "&session-id="   + document.getElementById("session-id").value + 
-        "&booking-id="   + document.getElementById("booking-id").value +
-        "&booking-status=" + document.getElementById("booking-status").value
+        "booking-name="        + document.getElementById("booking-name").value +
+        "&ensemble-id="        + document.getElementById("ensemble-id").value + 
+        "&booking-date="       + document.getElementById("booking-date").value +
+        "&booking-time="       + document.getElementById("booking-time").value +
+        "&booking-location="   + document.getElementById("booking-location").value +
+        "&session-id="         + document.getElementById("session-id").value + 
+        "&booking-id="         + document.getElementById("booking-id").value +
+        "&booking-status="     + document.getElementById("booking-status").value +
+        "&booking-status-new=" + document.getElementById("booking-status-new").value
       );
 
       var status = document.getElementById("booking-status").value;
@@ -449,10 +523,10 @@ if (login_valid())
     }
 
     function setToNewBooking() {
-      modalUpdate('not yet created', -1, '', '', '', '');
+      modalUpdate('not yet created', -1, '', '', '', '', '');
     }
 
-    function loadBooking(booking_id, status) {
+    function loadBooking(booking_id, status, accept_reject = -1) {
       session_id = document.getElementById("session-id").value;
 
       var xhttp = new XMLHttpRequest();
@@ -476,7 +550,7 @@ if (login_valid())
         console.log(JSON_response);
 
         if (JSON_response.status == "success") {
-          modalUpdate(booking_id, JSON_response.booking_status, JSON_response.booking_date, JSON_response.booking_time, JSON_response.booking_name, JSON_response.booking_location);
+          modalUpdate(booking_id, JSON_response.booking_status, JSON_response.booking_date, JSON_response.booking_time, JSON_response.booking_name, JSON_response.booking_location, JSON_response.booking_ensemble_id, accept_reject);
         }
         else {
           modalError(status, JSON_response.error_message);
@@ -508,7 +582,7 @@ if (login_valid())
               <div class="card-header">
                 <h3 class="card-title">Book Keiron for events</h3>
                 <div class="card-actions" style="float: right;">
-                  <a href="#" data-bs-toggle="modal" data-bs-target="#add-booking" onclick="setToNewBooking()" class="btn btn-primary ms-auto my-2">Add booking</a>
+                  <a href="#" data-bs-toggle="modal" data-bs-target="#add-booking" data-bs-backdrop="static" onclick="setToNewBooking()" class="btn btn-primary ms-auto my-2">Add booking</a>
                 </div>
               </div>
               <div class="card-body border-bottom py-3 col-form-label">
@@ -544,9 +618,10 @@ if (login_valid())
                   </form>
                 </div>
 
-                <div class="modal modal-blur fade" id="add-booking" tabindex="-1" style="display: none;" aria-hidden="true">
+                <div class="modal modal-blur fade" id="add-booking" tabindex="-1" style="display: none;" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                   <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                     <div class="modal-content">
+                      <div id="add-booking-status" class="modal-status bg-primary"></div>
                       <form id="form-add-booking">
                         <div class="modal-header">
                           <h5 class="modal-title" id="add-booking-title">Add booking</h5>
@@ -579,6 +654,7 @@ if (login_valid())
 
                                     $user_level_and_id = get_user_level_and_id();
 
+                                    // TODO: This needs fixing!!! Selecting wrong ensemble currently.
                                     while($ensemble = $ensembles_result->fetch_assoc())
                                     {
                                       ?>
@@ -629,6 +705,7 @@ if (login_valid())
                         </div>
                         <input id="session-id" name="session-id" type="hidden" value="<?=$_COOKIE["session_ID"];?>">
                         <input id="booking-status" name="booking-status" type="hidden" value="">
+                        <input id="booking-status-new" name="booking-status-new" type="hidden" value="">
                       </form>
                     </div>
                   </div>
@@ -662,6 +739,9 @@ if (login_valid())
                           </th>
                           <th class="sticky-top">
                             Approval status
+                          </th>
+                          <th class="sticky-top">
+                            Status code
                           </th>
 													<th class="sticky-top">
                             Waiting for

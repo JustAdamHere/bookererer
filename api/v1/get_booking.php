@@ -17,19 +17,19 @@
     {
       $JSON_response->status = "success";
 
-      $bookings_query = $db_connection->query("SELECT * FROM `bookings` WHERE `booking_ID`=".$booking_ID." LIMIT 1");
+      $bookings_query = $db_connection->query("SELECT * FROM `bookings` WHERE `booking_ID`='".$booking_ID."' ORDER BY `status` DESC LIMIT 1");
 
       if ($bookings_query)
       {
         $bookings = $bookings_query->fetch_assoc();
 
         $booking_datetime_utc = new DateTime("now", new DateTimeZone("Europe/London"));
-        $booking_datetime_utc->setTimestamp($booking["datetime"]);
+        $booking_datetime_utc->setTimestamp($bookings["datetime"]);
         $booking_datetime_utc->setTimezone(new DateTimeZone("UTC"));
 
-        $JSON_response->booking_name    = $bookings["name"];
-        $JSON_response->booking_status  = $bookings["status"];
-        $JSON_response->booking_ensemble_id = $bookings["booking_ensemble"];
+        $JSON_response->booking_name            = $bookings["name"];
+        $JSON_response->booking_status          = $bookings["status"];
+        $JSON_response->booking_ensemble_id     = $bookings["booking_ensemble"];
         $JSON_response->booking_date            = $booking_datetime_utc->format("Y-m-d");
         $JSON_response->booking_time            = $booking_datetime_utc->format("H:i");
         $JSON_response->booking_location        = $bookings["location"];
