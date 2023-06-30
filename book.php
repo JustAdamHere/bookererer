@@ -373,6 +373,14 @@ if (login_valid())
       document.getElementById("booking-name").value     = booking_name;
       document.getElementById("booking-location").value = booking_location;
 
+      document.getElementById("booking-date").disabled     = false;
+      document.getElementById("booking-time").disabled     = false;
+      document.getElementById("booking-name").disabled     = false;
+      document.getElementById("booking-location").disabled = false;
+      document.getElementById("ensemble-id").disabled      = false;
+
+      document.getElementById("add-booking-info").style.display = "block";
+
       document.getElementById("ensemble-id").value = booking_ensemble_id;
 
       document.getElementById("submit-add-booking").classList.remove("disabled");
@@ -406,6 +414,14 @@ if (login_valid())
         document.getElementById("add-booking-title") .innerHTML = "Decline booking";
 
         document.getElementById("booking-status-new").value = 2;
+
+        document.getElementById("booking-date").disabled     = true;
+        document.getElementById("booking-time").disabled     = true;
+        document.getElementById("booking-name").disabled     = true;
+        document.getElementById("booking-location").disabled = true;
+        document.getElementById("ensemble-id").disabled      = true;
+
+        document.getElementById("add-booking-info").style.display = "none";
       }
       else if (accept_reject == 0 && booking_status == 4)
       {
@@ -421,6 +437,14 @@ if (login_valid())
         document.getElementById("add-booking-title") .innerHTML = "Cancel booking";
 
         document.getElementById("booking-status-new").value = 5;
+
+        document.getElementById("booking-date").disabled     = true;
+        document.getElementById("booking-time").disabled     = true;
+        document.getElementById("booking-name").disabled     = true;
+        document.getElementById("booking-location").disabled = true;
+        document.getElementById("ensemble-id").disabled      = true;
+
+        document.getElementById("add-booking-info").style.display = "none";
       }
       else if (accept_reject == 1)
       {
@@ -436,6 +460,14 @@ if (login_valid())
         document.getElementById("add-booking-title") .innerHTML = "Accept booking";
 
         document.getElementById("booking-status-new").value = 3;        
+
+        document.getElementById("booking-date").disabled     = true;
+        document.getElementById("booking-time").disabled     = true;
+        document.getElementById("booking-name").disabled     = true;
+        document.getElementById("booking-location").disabled = true;
+        document.getElementById("ensemble-id").disabled      = true;
+
+        document.getElementById("add-booking-info").style.display = "none";
       }
 
       document.getElementById("submit-add-booking").disabled = false;
@@ -628,6 +660,9 @@ if (login_valid())
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body" id="add-booking-error" style="display:none;">
+                        </div>
+                        <div class="modal-body" id="add-booking-info" style="display:block;">
+                          Please feel free to amend any details.
                         </div>
                         <div class="modal-body">
                           <div class="row">
