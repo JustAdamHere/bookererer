@@ -87,60 +87,6 @@
 			5 => "-"
 		];
 
-		$step_1_colour = [
-			0 => "bg-blue",
-			1 => "bg-green",
-			2 => "bg-green",
-			3 => "bg-green",
-			4 => "bg-green",
-			5 => "bg-green"
-		];
-
-		$step_2_colour = [
-			0 => "bg-black",
-			1 => "bg-blue",
-			2 => "bg-red",
-			3 => "bg-green",
-			4 => "bg-green",
-			5 => "bg-green"
-		];
-
-		$step_3_colour = [
-			0 => "bg-black",
-			1 => "bg-black",
-			2 => "bg-black",
-			3 => "bg-blue",
-			4 => "bg-green",
-			5 => "bg-red"
-		];
-
-		$step_1_opacity = [
-			0 => "opacity-100",
-			1 => "opacity-100",
-			2 => "opacity-100",
-			3 => "opacity-100",
-			4 => "opacity-100",
-			5 => "opacity-100"
-		];
-
-		$step_2_opacity = [
-			0 => "opacity-20",
-			1 => "opacity-100",
-			2 => "opacity-100",
-			3 => "opacity-100",
-			4 => "opacity-100",
-			5 => "opacity-100"
-		];
-		
-		$step_3_opacity = [
-			0 => "opacity-20",
-			1 => "opacity-20",
-			2 => "opacity-20",
-			3 => "opacity-100",
-			4 => "opacity-100",
-			5 => "opacity-100"
-    ];
-
     $green_option = [
       "",
       "Accept",
@@ -208,18 +154,7 @@
 				<div class="text-muted mt-nl"><?=$last_updated;?></span>
 			</td>
 			<td>
-				<span class="avatar <?=$step_1_opacity[$status];?>"
-					style="background-image: url('<?=$ensemble_logo;?>')">
-					<span class="badge <?=$step_1_colour[$status];?> text-10">1</span>
-				</span>
-				<span class="avatar <?=$step_2_opacity[$status];?>"
-					style="background-image: url('<?=$keiron_logo;?>');">
-					<span class="badge <?=$step_2_colour[$status];?> text-10">2</span>
-				</span>
-				<span class="avatar <?=$step_3_opacity[$status];?>"
-					style="background-image: url('<?=$ensemble_logo;?>');">
-					<span class="badge <?=$step_3_colour[$status];?> text-10">3</span>
-				</span>
+				<?=get_steps($status, $ensemble_logo, $keiron_logo);?>
 			</td>
       <td>
         <div class="text-muted mt-nl text-center">
