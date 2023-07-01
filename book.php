@@ -42,7 +42,7 @@
     $booking_id = $booking["booking_ID"];
     $booking_name = $booking["name"];
     $status = $booking["status"];
-    $booking_date = $booking_datetime->format("l, jS F Y");
+    $booking_date = $booking_datetime->format("l, jS F Y @ H:i");
     $booking_location = $booking["location"];
     $last_updated = FindTimeAgo($booking["updated_datetime"]);
 
@@ -335,6 +335,7 @@ if (login_valid())
 
         document.getElementById("booking-date").disabled = true;
         document.getElementById("booking-time").disabled = true;
+        document.getElementById("ensemble-id").disabled  = true;
 
         document.getElementById("booking-status-new").value = parseInt(booking_status) + 1;
       }

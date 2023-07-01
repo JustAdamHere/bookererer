@@ -1,3 +1,5 @@
+<?php include_once($_SERVER['DOCUMENT_ROOT']."/includes/kernel.php"); ?>
+
 <?php
   $id     = strip_tags($_GET["id"]);
   $status = strip_tags($_GET["status"]);

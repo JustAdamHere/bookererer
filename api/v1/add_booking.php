@@ -27,14 +27,19 @@
       {
         $JSON_response->status = "success";
 
-        $booking_datetime = strtotime($booking_date."T".$booking_time.":00");
+        $booking_datetime = new DateTime();
+        $booking_datetime->setDate(substr($booking_date, 0, 4), substr($booking_date, 5, 2), substr($booking_date, 8, 2));
+        $booking_datetime->setTime(substr($booking_time, 0, 2), substr($booking_time, 3, 2));
+        $booking_datetime->setTimezone(new DateTimeZone("Europe/London"));
+
+        // $booking_datetime = strtotime($booking_date."T".$booking_time.":00");
 
         if ($booking_id == "not yet created")
         {
           $booking_id = $db_connection->query("SELECT `AUTO_INCREMENT` FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'bookererer' AND TABLE_NAME = 'bookings'")->fetch_assoc()["AUTO_INCREMENT"];
         }
 
-        $term_dates_query = $db_connection->query("INSERT INTO `bookings` (`booking_ID`, `name`, `status`, `booking_ensemble`, `datetime`, `location`, `updated_datetime`, `updated_by`, `deleted`) VALUES ('".$booking_id."', '".$booking_name."', '".($booking_status_new)."', '".$ensemble_id."', '".$booking_datetime."', '".$booking_location."', '".time()."', '".$user_details["login_ID"]."', '0')");
+        $term_dates_query = $db_connection->query("INSERT INTO `bookings` (`booking_ID`, `name`, `status`, `booking_ensemble`, `datetime`, `location`, `updated_datetime`, `updated_by`, `deleted`) VALUES ('".$booking_id."', '".$booking_name."', '".($booking_status_new)."', '".$ensemble_id."', '".$booking_datetime->getTimestamp()."', '".$booking_location."', '".time()."', '".$user_details["login_ID"]."', '0')");
 
         if (!$term_dates_query)
         {

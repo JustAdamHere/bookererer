@@ -294,7 +294,6 @@ function create_email($booking, $ensemble_name)
 
   $booking_datetime_utc = new DateTime("now", new DateTimeZone("Europe/London"));
   $booking_datetime_utc->setTimestamp($booking["datetime"]);
-  $booking_datetime_utc->setTimezone(new DateTimeZone("UTC"));
 
   $message .= '<td class="font-strong text-right" style="font-family: Open Sans, -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, Helvetica, Arial, sans-serif; font-weight: 600; padding: 4px 0 4px 12px;" align="right">'.$booking_datetime_utc->format("l, jS F Y").' at '.$booking_datetime_utc->format("H:i").'</td>';
   $message .= '</tr>';

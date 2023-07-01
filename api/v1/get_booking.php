@@ -25,7 +25,7 @@
 
         $booking_datetime_utc = new DateTime("now", new DateTimeZone("Europe/London"));
         $booking_datetime_utc->setTimestamp($bookings["datetime"]);
-        $booking_datetime_utc->setTimezone(new DateTimeZone("UTC"));
+        // $booking_datetime_utc->setTimezone(new DateTimeZone("UTC"));
 
         $JSON_response->booking_name            = $bookings["name"];
         $JSON_response->booking_status          = $bookings["status"];
