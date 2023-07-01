@@ -80,8 +80,8 @@
             xhttp.open("POST", "<?=$config['base_url'];?>/api/v1/do_login.php", true);
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
-            var emailField    = document.getElementById("emailField").value;
-            var passwordField = document.getElementById("passwordField").value;
+            var emailField    = encodeURIComponent(document.getElementById("emailField").value);
+            var passwordField = encodeURIComponent(document.getElementById("passwordField").value);
 
             xhttp.send("email=" + emailField + "&password=" + passwordField);
 

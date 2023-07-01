@@ -22,12 +22,28 @@
       <?php
         if (login_valid())
         {
-          ?>
+          $login_details = get_user_details();
 
-          <?php
-            $icon_style = "style=\"background-image: url('')\"";
-            $name       = "Adam Blakey";
-            $role       = "Administrator";
+          $icon_style = "style=\"background-image: url('".$login_details["logo"]."')\"";
+          $name       = $login_details["name"];
+
+          switch ($login_details["user_level"]) {
+            case 1:
+              $role = "Ensemble";
+              break;
+
+            case 2:
+              $role = "Keiron";
+              break;
+
+            case 3:
+              $role = "Administrator";
+              break;
+            
+            default:
+              $role = "Unknown";
+              break;
+          }
 
             // To temporarily hide settings and notifications, which are not yet implemented.
             $hide_settings = true;

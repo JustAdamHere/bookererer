@@ -59,7 +59,7 @@
 		elseif ($select_query->num_rows == 0)
 		{
 			$JSON_response->status        = "error";	
-			$JSON_response->error_message = "unknown email address.";
+			$JSON_response->error_message = "unknown email address: ".$_POST["email"];
 		}
 		else
 		{

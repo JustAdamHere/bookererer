@@ -23,7 +23,7 @@
     if ($user_details["user_level"] >= 1)
     {
 
-      if (0 <= $booking_status_new && $booking_status_new <= 5)
+      if (0 <= $booking_status_new && $booking_status_new <= 5 || $booking_id == "not yet created")
       {
         $JSON_response->status = "success";
 

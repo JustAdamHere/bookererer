@@ -320,7 +320,25 @@ if (login_valid())
 
       document.getElementById("submit-add-booking").classList.remove("disabled");
 
-      if (accept_reject == -1)
+      if (accept_reject == -1 && booking_status == 3)
+      {
+        document.getElementById("submit-add-booking").classList.remove("btn-success");
+        document.getElementById("submit-add-booking").classList.remove("btn-danger");
+        document.getElementById("submit-add-booking").classList.add("btn-primary");
+
+        document.getElementById("add-booking-status").classList.remove("bg-success");
+        document.getElementById("add-booking-status").classList.remove("bg-danger");
+        document.getElementById("add-booking-status").classList.add("bg-primary");
+
+        document.getElementById("submit-add-booking").innerHTML = bookingFormSubmitIcon[booking_status] + bookingFormSubmitText[booking_status];
+        document.getElementById("add-booking-title") .innerHTML = bookingFormSubmitText[booking_status];
+
+        document.getElementById("booking-date").disabled = true;
+        document.getElementById("booking-time").disabled = true;
+
+        document.getElementById("booking-status-new").value = parseInt(booking_status) + 1;
+      }
+      else if (accept_reject == -1)
       {
         document.getElementById("submit-add-booking").classList.remove("btn-success");
         document.getElementById("submit-add-booking").classList.remove("btn-danger");
@@ -628,7 +646,7 @@ if (login_valid())
                                     while($ensemble = $ensembles_result->fetch_assoc())
                                     {
                                       ?>
-                                      <option value="<?=$ensemble["ID"];?>" <?=($user_level_and_id["user_level"] == $ensemble["ID"])?"selected":"";?> <?=(($user_level_and_id["ID"] != $ensemble["ID"]) && ($user_level_and_id["user_level"] == 1))?"disabled":"";?>><?=$ensemble['name'];?></option>
+                                      <option value="<?=$ensemble["ID"];?>" <?=($user_level_and_id["user_id"] == $ensemble["ID"])?"selected":"";?> <?=(($user_level_and_id["user_id"] != $ensemble["ID"]) && ($user_level_and_id["user_level"] == 1))?"disabled":"";?>><?=$ensemble['name'];?></option>
                                       <?php
                                     }
 

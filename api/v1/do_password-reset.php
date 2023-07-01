@@ -19,11 +19,11 @@
 		include($_SERVER['DOCUMENT_ROOT']."/includes/db_connect.php");
 		$db_connection = db_connect();
 
-		$reset_token_query = $db_connection->prepare("SELECT `member_ID` FROM `password_reset_tokens` INNER JOIN `logins` ON `password_reset_tokens`.`member_ID`=`logins`.`ID` WHERE `password_reset_tokens`.`token` = ? AND `password_reset_tokens`.`expiry` > UNIX_TIMESTAMP()");
+		$reset_token_query = $db_connection->prepare("SELECT `login_ID` FROM `password_reset_tokens` INNER JOIN `logins` ON `password_reset_tokens`.`login_ID`=`logins`.`ID` WHERE `password_reset_tokens`.`token` = ? AND `password_reset_tokens`.`expiry` > UNIX_TIMESTAMP()");
     $reset_token_query->bind_param("s", $token);
     $reset_token_query->execute();
     $reset_token_query->store_result();
-    $reset_token_query->bind_result($member_ID);
+    $reset_token_query->bind_result($login_ID);
     $reset_token_query->fetch();
 
 		if ($reset_token_query->num_rows == 1)
@@ -36,7 +36,7 @@
       $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
       $reset_password_query = $db_connection->prepare("UPDATE `logins` SET `password` = ? WHERE `ID` = ?");
-      $reset_password_query->bind_param("si", $password_hash, $member_ID);
+      $reset_password_query->bind_param("si", $password_hash, $login_ID);
       $reset_password_query->execute();
 
       $JSON_response->status = "success";
