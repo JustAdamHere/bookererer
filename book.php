@@ -4,7 +4,7 @@
 <?php
 	$sort_options = [
     "datetime" => "Date",
-    "ensemble" => "Ensemble",
+    "booking_ensemble" => "Ensemble",
     "name" => "Name",
     "location" => "Location",
     "status" => "Status"
@@ -42,7 +42,6 @@
     $booking_id = $booking["booking_ID"];
     $booking_name = $booking["name"];
     $status = $booking["status"];
-    $booking_date = $booking_datetime->format("l, jS F Y @ H:i");
     $booking_location = $booking["location"];
     $last_updated = FindTimeAgo($booking["updated_datetime"]);
 
@@ -118,7 +117,7 @@
 		<tr class="<?=booking_viewable($booking["booking_ensemble"])?"opacity-100":"opacity-50";?>">
       <td>
         <?php 
-          if (booking_restricted($booking["booking_ensemble"], $booking["status"]) && !($green_option[$status] == "" && $red_option[$status] == "" && $blue_option[$status] == ""))
+          if (booking_restricted($booking["booking_ensemble"], $booking["status"]) && !($green_option[$status] == "" && $red_option[$status] == "" && $blue_option[$status] == "") && $status != 4)
           {
             ?>
             <div class="badge bg-primary" title="Status code: <?=$status;?>"></div>
@@ -135,7 +134,7 @@
 				<?=$booking_name;?>
 			</td>
 			<td>
-				<?=$booking_date;?>
+      <?=get_human_date_range($booking["datetime"], $booking["datetime_end"]);?>
 				<div class="mt-n1">
 					<a href="#" data-bs-toggle="modal" data-bs-target="#add-to-calendar_<?=$booking_id;?>">Add to calendar</a>
 				</div>
@@ -168,8 +167,6 @@
 			</td>
       <td>
         <?php
-          // TODO: Some work to allow ensembles to cancel events.
-          // TODO: Disable the fields when they cancel??
           if (booking_restricted($booking["booking_ensemble"], $booking["status"]))
           {
             if ($green_option[$status] != "")
@@ -210,14 +207,11 @@
 		</tr>
 
     <?php
-      $booking_datetime_utc = new DateTime("now", new DateTimeZone("Europe/London"));
-      $booking_datetime_utc->setTimestamp($booking["booking_datetime"]);
-      $booking_datetime_utc->setTimezone(new DateTimeZone("UTC"));
+      $booking_datetime = new DateTime("now", new DateTimeZone("Europe/London"));
+      $booking_datetime->setTimestamp($booking["datetime"]);
 
-      $booking_datetime_end_utc = new DateTime("now", new DateTimeZone("Europe/London"));
-      $booking_datetime_end_utc->setTimestamp($booking["booking_datetime"]);
-      $booking_datetime_end_utc->setTimezone(new DateTimeZone("UTC"));
-      $booking_datetime_end_utc->add(new DateInterval("PT180M"));
+      $booking_datetime_end = new DateTime("now", new DateTimeZone("Europe/London"));
+      $booking_datetime_end->setTimestamp($booking["datetime_end"]);
     ?>
 
     <div class="modal modal-blur fade" id="add-to-calendar_<?=$booking_id;?>" tabindex="-1" style="display: none;" aria-hidden="true">
@@ -227,23 +221,28 @@
             <div class="modal-title">Add to calendar</div>
             <div class="row g-2 align-items-center">
               <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                <a target="_blank" href="https://calendar.google.com/calendar/render?action=TEMPLATE&dates=<?=$booking_datetime_utc->format("Ymd\THisZ");?>%2F<?=$booking_datetime_end_utc->format("Ymd\THisZ");?>&details=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&location=<?=urlencode($booking["location"]);?>&text=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon" aria-label="Google Calendar" style="color: #ffffff; background-color: #3f7ee8;" onclick="$('#add-to-calendar_<?=$booking_id;?>').modal('hide')">
+                <a target="_blank" href="https://calendar.google.com/calendar/render?action=TEMPLATE&dates=<?=$booking_datetime->format("Ymd\THisZ");?>%2F<?=$booking_datetime_end->format("Ymd\THisZ");?>&details=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&location=<?=($booking["location"]);?>&text=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon" aria-label="Google Calendar" style="color: #ffffff; background-color: #3f7ee8;" onclick="$('#add-to-calendar_<?=$booking_id;?>').modal('hide')">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-google" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M17.788 5.108a9 9 0 1 0 3.212 6.892h-8"></path></svg>
                 </a>
               </div>
               <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                <a target="_blank" href="https://outlook.live.com/calendar/0/deeplink/compose?body=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&enddt=<?=urlencode($booking_datetime_end_utc->format("Y-m-d\TH:i:s+00:00"));?>&location=<?=urlencode($booking["location"]);?>&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=<?=urlencode($booking_datetime_utc->format("Y-m-d\TH:i:s+00:00"));?>&subject=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon disabled" aria-label="Outlook" style="color: #ffffff; background-color: #1175cc;">
+                <a target="_blank" href="https://outlook.live.com/calendar/0/deeplink/compose?body=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&enddt=<?=urlencode($booking_datetime_end->format("Y-m-d\TH:i:s+00:00"));?>&location=<?=($booking["location"]);?>&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=<?=urlencode($booking_datetime->format("Y-m-d\TH:i:s+00:00"));?>&subject=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon" aria-label="Outlook" style="color: #ffffff; background-color: #1175cc;">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mail" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"></path><path d="M3 7l9 6l9 -6"></path></svg>
                 </a>
               </div>
               <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                <a target="_blank" href="https://calendar.yahoo.com/?desc=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&et=<?=urlencode($booking_datetime_end_utc->format("ymd\THisZ"));?>&in_loc=<?=urlencode($booking["location"]);?>&st=<?=urlencode($booking_datetime_utc->format("ymd\THisZ"));?>&title=<?=urlencode($booking["name"]);?>&v=60" class="btn w-100 btn-icon disabled" aria-label="Yahoo" style="color: #ffffff; background-color: #5b00c8;">
+                <a target="_blank" href="https://calendar.yahoo.com/?desc=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&et=<?=urlencode($booking_datetime_end->format("Ymd\THisZ"));?>&in_loc=<?=($booking["location"]);?>&st=<?=urlencode($booking_datetime->format("Ymd\THisZ"));?>&title=<?=urlencode($booking["name"]);?>&v=60" class="btn w-100 btn-icon" aria-label="Yahoo" style="color: #ffffff; background-color: #5b00c8;">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-yahoo" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 6l5 0"></path><path d="M7 18l7 0"></path><path d="M4.5 6l5.5 7v5"></path><path d="M10 13l6 -5"></path><path d="M12.5 8l5 0"></path><path d="M20 11l0 4"></path><path d="M20 18l0 .01"></path></svg>
                 </a>
               </div>
               <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
-                <a target="_blank" href="https://outlook.office.com/calendar/0/deeplink/compose?body=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&enddt=<?=urlencode($booking_datetime_end_utc->format("Y-m-d\TH:i:s+00:00"));?>&location=<?=urlencode($booking["location"]);?>&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=<?=urlencode($booking_datetime_utc->format("Y-m-d\TH:i:s+00:00"));?>&subject=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon disabled" aria-label="Office365" style="color: #ffffff; background-color: #cc3802;">
+                <a target="_blank" href="https://outlook.office.com/calendar/0/deeplink/compose?body=Generated%20automatically%20by%20bookings.keironanderson.co.uk.&enddt=<?=urlencode($booking_datetime_end->format("Y-m-d\TH:i:s+00:00"));?>&location=<?=($booking["location"]);?>&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=<?=urlencode($booking_datetime->format("Y-m-d\TH:i:s+00:00"));?>&subject=<?=urlencode($booking["name"]);?>" class="btn w-100 btn-icon" aria-label="Office365" style="color: #ffffff; background-color: #cc3802;">
                   <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-office" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 18h9v-12l-5 2v5l-4 2v-8l9 -4l7 2v13l-7 3z"></path></svg>
+                </a>
+              </div>
+              <div class="col-6 col-sm-4 col-md-2 col-xl-auto py-3">
+                <a target="_blank" href="data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:<?=$booking_datetime->format("Ymd\THisZ");?>%0ADTEND:<?=$booking_datetime_end->format("Ymd\THisZ");?>%0ASUMMARY:<?=$booking["name"];?>%0ADESCRIPTION:Generated%20automatically%20by%20bookings.keironanderson.co.uk.%0ALOCATION:<?=$booking["location"];?>%0AEND:VEVENT%0AEND:VCALENDAR%0A" class="btn w-100 btn-icon bg-success" aria-label="ICS" style="color: #ffffff;">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 11l5 5l5 -5"></path><path d="M12 4l0 12"></path></svg>
                 </a>
               </div>
             </div>
@@ -302,7 +301,7 @@ if (login_valid())
     var acceptIcon  = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-circle-check" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M9 12l2 2l4 -4"></path></svg>';
     var rejectIcon = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-ban" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M5.7 5.7l12.6 12.6"></path></svg>';
 
-    function modalUpdate(booking_id, booking_status, booking_date, booking_time, booking_name, booking_location, booking_ensemble_id, accept_reject)
+    function modalUpdate(booking_id, booking_status, booking_date, booking_time, booking_date_end, booking_time_end, booking_name, booking_location, booking_ensemble_id, accept_reject)
     {
       // accept_reject:
       //  -1: neither
@@ -316,11 +315,16 @@ if (login_valid())
       document.getElementById("booking-status").value   = booking_status;
       document.getElementById("booking-date").value     = booking_date;
       document.getElementById("booking-time").value     = booking_time;
+      document.getElementById("booking-date-end").value = booking_date_end;
+      document.getElementById("booking-time-end").value = booking_time_end;
       document.getElementById("booking-name").value     = booking_name;
       document.getElementById("booking-location").value = booking_location;
+      document.getElementById("clash-agreed").value     = 0;
 
       document.getElementById("booking-date").disabled     = false;
       document.getElementById("booking-time").disabled     = false;
+      document.getElementById("booking-date-end").disabled = false;
+      document.getElementById("booking-time-end").disabled = false;
       document.getElementById("booking-name").disabled     = false;
       document.getElementById("booking-location").disabled = false;
       document.getElementById("ensemble-id").disabled      = false;
@@ -346,6 +350,8 @@ if (login_valid())
 
         document.getElementById("booking-date").disabled = true;
         document.getElementById("booking-time").disabled = true;
+        document.getElementById("booking-date-end").disabled = true;
+        document.getElementById("booking-time-end").disabled = true;
         document.getElementById("ensemble-id").disabled  = true;
 
         document.getElementById("booking-status-new").value = parseInt(booking_status) + 1;
@@ -382,6 +388,8 @@ if (login_valid())
 
         document.getElementById("booking-date").disabled     = true;
         document.getElementById("booking-time").disabled     = true;
+        document.getElementById("booking-date-end").disabled = true;
+        document.getElementById("booking-time-end").disabled = true;
         document.getElementById("booking-name").disabled     = true;
         document.getElementById("booking-location").disabled = true;
         document.getElementById("ensemble-id").disabled      = true;
@@ -405,6 +413,8 @@ if (login_valid())
 
         document.getElementById("booking-date").disabled     = true;
         document.getElementById("booking-time").disabled     = true;
+        document.getElementById("booking-date-end").disabled = true;
+        document.getElementById("booking-time-end").disabled = true;
         document.getElementById("booking-name").disabled     = true;
         document.getElementById("booking-location").disabled = true;
         document.getElementById("ensemble-id").disabled      = true;
@@ -428,6 +438,8 @@ if (login_valid())
 
         document.getElementById("booking-date").disabled     = true;
         document.getElementById("booking-time").disabled     = true;
+        document.getElementById("booking-date-end").disabled = true;
+        document.getElementById("booking-time-end").disabled = true;
         document.getElementById("booking-name").disabled     = true;
         document.getElementById("booking-location").disabled = true;
         document.getElementById("ensemble-id").disabled      = true;
@@ -481,11 +493,14 @@ if (login_valid())
         "&ensemble-id="        + document.getElementById("ensemble-id").value + 
         "&booking-date="       + document.getElementById("booking-date").value +
         "&booking-time="       + document.getElementById("booking-time").value +
+        "&booking-date-end="   + document.getElementById("booking-date-end").value +
+        "&booking-time-end="   + document.getElementById("booking-time-end").value +
         "&booking-location="   + document.getElementById("booking-location").value +
         "&session-id="         + document.getElementById("session-id").value + 
         "&booking-id="         + document.getElementById("booking-id").value +
         "&booking-status="     + document.getElementById("booking-status").value +
-        "&booking-status-new=" + document.getElementById("booking-status-new").value
+        "&booking-status-new=" + document.getElementById("booking-status-new").value + 
+        "&clash-agreed="       + document.getElementById("clash-agreed").value
       );
 
       var status = document.getElementById("booking-status").value;
@@ -497,7 +512,13 @@ if (login_valid())
           var JSON_response = {"status": "error", "error_message": "Invalid JSON response from server."};
         }
 
-        if (JSON_response.status == "success") {
+        console.log(JSON_response);
+
+        if (JSON_response.status == "warning") {
+          modalError(status, "<strong>there is an existing booking on the same day</strong> by " + JSON_response.clash_ensemble_name + " between " + JSON_response.clash_datetime_range + " titled " + JSON_response.clash_name + ".\n<strong>Please submit again if you intend to ignore this warning</strong>.");
+          document.getElementById("clash-agreed").value = 1;
+        }
+        else if (JSON_response.status == "success") {
           modalSuccess();
         }
         else {
@@ -520,7 +541,7 @@ if (login_valid())
     }
 
     function setToNewBooking() {
-      modalUpdate('not yet created', -1, '', '', '', '', '');
+      modalUpdate('not yet created', -1, '', '', '', '', '', '', '');
     }
 
     function loadBooking(booking_id, status, accept_reject = -1) {
@@ -547,7 +568,7 @@ if (login_valid())
         console.log(JSON_response);
 
         if (JSON_response.status == "success") {
-          modalUpdate(booking_id, JSON_response.booking_status, JSON_response.booking_date, JSON_response.booking_time, JSON_response.booking_name.decodeHTML(), JSON_response.booking_location.decodeHTML(), JSON_response.booking_ensemble_id, accept_reject);
+          modalUpdate(booking_id, JSON_response.booking_status, JSON_response.booking_date, JSON_response.booking_time, JSON_response.booking_date_end, JSON_response.booking_time_end, JSON_response.booking_name.decodeHTML(), JSON_response.booking_location.decodeHTML(), JSON_response.booking_ensemble_id, accept_reject);
         }
         else {
           modalError(status, JSON_response.error_message);
@@ -670,7 +691,7 @@ if (login_valid())
                           <div class="row">
                             <div class="col-lg-6">
                               <div class="mb-3">
-                                <label class="form-label required">Event date</label>
+                                <label class="form-label required">Start event date</label>
                                 <div class="input-icon">
                                   <input type="text" name="booking-date" id="booking-date" class="form-control" placeholder="Select a date" value="" style="min-width: 150px;" required>
                                   <span class="input-icon-addon"><!-- Download SVG icon from http://tabler-icons.io/i/calendar -->
@@ -681,8 +702,27 @@ if (login_valid())
                             </div>
                             <div class="col-lg-6">
                               <div class="mb-3">
-                                <label class="form-label required">Event time</label>
+                                <label class="form-label required">Start event time</label>
                                 <input type="time" name="booking-time" id="booking-time" class="form-control" autocomplete="off" value="" required>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-lg-6">
+                              <div class="mb-3">
+                                <label class="form-label required">End event date</label>
+                                <div class="input-icon">
+                                  <input type="text" name="booking-date-end" id="booking-date-end" class="form-control" placeholder="Select a date" value="" style="min-width: 150px;" required>
+                                  <span class="input-icon-addon"><!-- Download SVG icon from http://tabler-icons.io/i/calendar -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line><line x1="11" y1="15" x2="12" y2="15"></line><line x1="12" y1="15" x2="12" y2="18"></line></svg>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-lg-6">
+                              <div class="mb-3">
+                                <label class="form-label required">End event time</label>
+                                <input type="time" name="booking-time-end" id="booking-time-end" class="form-control" autocomplete="off" value="" required>
                               </div>
                             </div>
                           </div>
@@ -706,6 +746,7 @@ if (login_valid())
                         <input id="session-id" name="session-id" type="hidden" value="<?=$_COOKIE["session_ID"];?>">
                         <input id="booking-status" name="booking-status" type="hidden" value="">
                         <input id="booking-status-new" name="booking-status-new" type="hidden" value="">
+                        <input id="clash-agreed" name="clash-agreed" type="hidden" value="0">
                       </form>
                     </div>
                   </div>
@@ -726,10 +767,10 @@ if (login_valid())
                             Name
                           </th>
                           <th class="sticky-top">
-                            Concert date
+                            Booking date
                           </th>
                           <th class="sticky-top">
-                            Concert location
+                            Booking location
                           </th>
                           <th class="sticky-top">
                             First created
@@ -889,6 +930,18 @@ if (login_valid())
       document.addEventListener("DOMContentLoaded", function() {
         window.Litepicker && (new Litepicker({
           element: document.getElementById('booking-date'),
+          buttonText: {
+            previousMonth: `<!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="15 6 9 12 15 18" /></svg>`,
+            nextMonth: `<!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="9 6 15 12 9 18" /></svg>`,
+          },
+        }));
+      });
+
+      document.addEventListener("DOMContentLoaded", function() {
+        window.Litepicker && (new Litepicker({
+          element: document.getElementById('booking-date-end'),
           buttonText: {
             previousMonth: `<!-- Download SVG icon from http://tabler-icons.io/i/chevron-left -->
           <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><polyline points="15 6 9 12 15 18" /></svg>`,

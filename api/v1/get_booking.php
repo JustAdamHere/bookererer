@@ -25,6 +25,9 @@
 
         $booking_datetime_utc = new DateTime("now", new DateTimeZone("Europe/London"));
         $booking_datetime_utc->setTimestamp($bookings["datetime"]);
+        $booking_datetime_end_utc = new DateTime("now", new DateTimeZone("Europe/London"));
+        $booking_datetime_end_utc->setTimestamp($bookings["datetime_end"]);
+
         // $booking_datetime_utc->setTimezone(new DateTimeZone("UTC"));
 
         $JSON_response->booking_name            = $bookings["name"];
@@ -32,6 +35,8 @@
         $JSON_response->booking_ensemble_id     = $bookings["booking_ensemble"];
         $JSON_response->booking_date            = $booking_datetime_utc->format("Y-m-d");
         $JSON_response->booking_time            = $booking_datetime_utc->format("H:i");
+        $JSON_response->booking_date_end        = $booking_datetime_end_utc->format("Y-m-d");
+        $JSON_response->booking_time_end        = $booking_datetime_end_utc->format("H:i");
         $JSON_response->booking_location        = $bookings["location"];
         $JSON_response->booking_update_datetime = $bookings["update_datetime"];
         $JSON_response->booking_updated_by      = $bookings["updated_by"];

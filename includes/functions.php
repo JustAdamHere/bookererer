@@ -9387,4 +9387,150 @@ function timestamp_range($timestamp_start, $timestamp_end)
   }
 }
 
+function get_human_date_range($start, $end)
+{
+  $start_datetime = new DateTime();
+  $start_datetime->setTimestamp($start);
+  $start_datetime->setTimezone(new DateTimeZone("Europe/London"));
+
+  $end_datetime = new DateTime();
+  $end_datetime->setTimestamp($end);
+  $end_datetime->setTimezone(new DateTimeZone("Europe/London"));
+
+  if ($start_datetime->format("Y") == $end_datetime->format("Y"))
+  {
+    if ($start_datetime->format("m") == $end_datetime->format("m"))
+    {
+      if ($start_datetime->format("d") == $end_datetime->format("d"))
+      {
+        if ($start_datetime->format("H") == $end_datetime->format("H"))
+        {
+          if ($start_datetime->format("i") == $end_datetime->format("i"))
+          {
+            return $start_datetime->format("l, jS F Y"). " at ".$start_datetime->format("H:i");
+          }
+          else
+          {
+            return $start_datetime->format("l, jS F Y")." at ".$start_datetime->format("H:i")." — ".$end_datetime->format("H:i");
+          }
+        }
+        else
+        {
+          return $start_datetime->format("l, jS F Y")." at ".$start_datetime->format("H:i")." — ".$end_datetime->format("H:i");;
+        }
+      }
+      else
+      {
+        return $start_datetime->format("l, jS")." at ".$start_datetime->format("H:i")." — ".$end_datetime->format("l, jS F Y")." at ".$end_datetime->format("H:i");
+      }
+    }
+    else
+    {
+      return $start_datetime->format("l, jS F")." at ".$start_datetime->format("H:i")." — ".$end_datetime->format("l, jS F Y")." at ".$end_datetime->format("H:i");
+    }
+  }
+  else
+  {
+    return $start_datetime->format("l, jS F Y")." at ".$start_datetime->format("H:i")." — ".$end_datetime->format("l, jS F Y")." at ".$end_datetime->format("H:i");
+  }
+}
+
+function test_clash($booking_ID, $start, $end)
+{
+  require_once($_SERVER['DOCUMENT_ROOT']."/includes/db_connect.php");
+
+  ///////////////////////////////////////////////////////
+  // Clash to be reported if event is on the same day. //
+  ///////////////////////////////////////////////////////
+  $start_datetime = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+  $start_datetime->setTimestamp($start);
+
+  $start_start_of_day = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+  $start_start_of_day->setDate($start_datetime->format("Y"), $start_datetime->format("m"), $start_datetime->format("d"));
+
+  $start_end_of_day = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+  $start_end_of_day->setTimestamp($start_start_of_day->getTimestamp());
+  $start_end_of_day->modify("+1 day");
+
+  $end_datetime = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+  $end_datetime->setTimestamp($end);
+
+  $end_start_of_day = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+  $end_start_of_day->setDate($end_datetime->format("Y"), $end_datetime->format("m"), $end_datetime->format("d"));
+
+  $end_end_of_day = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+  $end_end_of_day->setTimestamp($end_start_of_day->getTimestamp());
+  $end_end_of_day->modify("+1 day");
+
+  ///////////////////////////////////////
+  // Check against all other bookings. //
+  ///////////////////////////////////////
+  $db_connection = db_connect();
+
+  //$all_bookings = $db_connection->query("SELECT * FROM `bookings` WHERE `deleted`=0 AND `booking_ID`!='".$booking_ID."')");
+  $all_bookings = $db_connection->query("SELECT a.* FROM `bookings` a INNER JOIN (SELECT `booking_ID`, max(`status`) `status` FROM `bookings` WHERE `deleted`=0 AND `booking_ID`!='".$booking_ID."' GROUP BY `booking_ID`) b USING(`booking_ID`, `status`)");
+
+  $clash_detected = false;
+  while($booking = $all_bookings->fetch_assoc())
+  {
+    $test_start_datetime = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+    $test_start_datetime->setTimestamp($booking["datetime"]);
+
+    $test_start_start_of_day = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+    $test_start_start_of_day->setDate($test_start_datetime->format("Y"), $test_start_datetime->format("m"), $test_start_datetime->format("d"));
+
+    $test_start_end_of_day = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+    $test_start_end_of_day->setTimestamp($test_start_start_of_day->getTimestamp());
+    $test_start_end_of_day->modify("+1 day");
+
+    $test_end_datetime = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+    $test_end_datetime->setTimestamp($booking["datetime_end"]);
+
+    $test_end_start_of_day = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+    $test_end_start_of_day->setDate($test_end_datetime->format("Y"), $test_end_datetime->format("m"), $test_end_datetime->format("d"));
+
+    $test_end_end_of_day = new DateTime("1970-01-01 00:00:00", new DateTimeZone("Europe/London"));
+    $test_end_end_of_day->setTimestamp($test_end_start_of_day->getTimestamp());
+    $test_end_end_of_day->modify("+1 day");
+
+    $start_clash_detected    = ($test_start_start_of_day->getTimestamp() <= $start_datetime->getTimestamp()) && ($start_datetime->getTimestamp() <= $test_end_end_of_day->getTimestamp());
+    $end_clash_detected      = ($test_start_start_of_day->getTimestamp() <= $end_datetime->getTimestamp())   && ($end_datetime->getTimestamp()   <= $test_end_end_of_day->getTimestamp());
+    $straddle_clash_detected = ($start_datetime->getTimestamp() <= $test_start_start_of_day->getTimestamp()) && ($test_end_end_of_day->getTimestamp() <= $end_datetime->getTimestamp());
+
+    // echo $test_start_start_of_day->format("Y-m-d H:i:s")."<br>";
+    // echo $start_datetime->format("Y-m-d H:i:s")."<br>";
+    // echo $test_end_end_of_day->format("Y-m-d H:i:s")."<br>";
+
+    // if ($start_clash_detected)
+    // {
+    //   "Start clash detected<br>";
+    // }
+    // if ($end_clash_detected)
+    // {
+    //   "End clash detected<br>";
+    // }
+    // if ($straddle_clash_detected)
+    // {
+    //   "Straddle clash detected<br>";
+    // }
+
+    if ($start_clash_detected || $end_clash_detected || $straddle_clash_detected)
+    {
+      $clash_detected = true;
+      break;
+    }
+  }
+
+  db_disconnect($db_connection);
+  
+  if ($clash_detected)
+  {
+    return $booking;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 ?>
