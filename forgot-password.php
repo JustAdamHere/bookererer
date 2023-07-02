@@ -30,7 +30,7 @@
         xhttp.timeout = 10000;
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
-        var emailField = document.getElementById("emailField").value;
+        var emailField = encodeURIComponent(document.getElementById("emailField").value);
 
         xhttp.send("email=" + emailField);
 

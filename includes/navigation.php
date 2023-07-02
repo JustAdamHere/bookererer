@@ -1,5 +1,6 @@
 <?php
-  if(login_restricted(1))
+  //if(login_restricted(1))
+  if (false)
   {
 ?>
   <div class="navbar-expand-md">

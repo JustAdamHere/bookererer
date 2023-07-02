@@ -9108,7 +9108,7 @@ function booking_restricted($booking_ensemble, $status)
   }
   elseif ($current_user_level == 1 && $current_user_id == $booking_ensemble)
   {
-    if ($status == 0 || $status == 3)
+    if ($status == 0 || $status == 3 || $status == 4)
     {
       return true;
     }

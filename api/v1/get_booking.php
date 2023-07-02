@@ -17,7 +17,7 @@
     {
       $JSON_response->status = "success";
 
-      $bookings_query = $db_connection->query("SELECT * FROM `bookings` WHERE `booking_ID`='".$booking_ID."' ORDER BY `status` DESC LIMIT 1");
+      $bookings_query = $db_connection->query("SELECT * FROM `bookings` WHERE `booking_ID`='".$booking_ID."' AND `deleted`='0' ORDER BY `status` DESC LIMIT 1");
 
       if ($bookings_query)
       {

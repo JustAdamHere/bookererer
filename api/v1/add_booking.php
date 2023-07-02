@@ -1,9 +1,9 @@
 <?php
-  $booking_name       = $_POST["booking-name"];
+  $booking_name       = htmlspecialchars($_POST["booking-name"]);
   $ensemble_id        = $_POST["ensemble-id"];
   $booking_date       = $_POST["booking-date"];
   $booking_time       = $_POST["booking-time"];
-  $booking_location   = $_POST["booking-location"];
+  $booking_location   = htmlspecialchars($_POST["booking-location"]);
   $session_id         = $_POST["session-id"];
   $booking_id         = $_POST["booking-id"];
   $booking_status     = $_POST["booking-status"];
@@ -22,6 +22,11 @@
 
     if ($user_details["user_level"] >= 1)
     {
+      // Hack to automatically approve Keiron's own bookings.
+      if ($user_details["user_level"] == 2 && $ensemble_id == 2)
+      {
+        $booking_status_new = 4;
+      }
 
       if (0 <= $booking_status_new && $booking_status_new <= 5 || $booking_id == "not yet created")
       {

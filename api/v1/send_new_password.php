@@ -384,7 +384,7 @@
 		if ($email_query->num_rows == 0)
 		{
 			$JSON_response->status        = "error";
-			$JSON_response->error_message = "no such email address";
+			$JSON_response->error_message = "no such email address: ".$email;
 		}
 		else
 		{

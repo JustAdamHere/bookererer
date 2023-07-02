@@ -270,6 +270,17 @@ if (login_valid())
   <meta name="robots" content="noindex,nofollow">
   <title><?=$title;?></title>
   <script>
+    String.prototype.decodeHTML = function() {
+      var map = {"gt":">" /* , … */};
+      return this.replace(/&(#(?:x[0-9a-f]+|\d+)|[a-z]+);?/gi, function($0, $1) {
+          if ($1[0] === "#") {
+              return String.fromCharCode($1[1].toLowerCase() === "x" ? parseInt($1.substr(2), 16)  : parseInt($1.substr(1), 10));
+          } else {
+              return map.hasOwnProperty($1) ? map[$1] : $0;
+          }
+      });
+    };
+
     var bookingFormSubmitText = [];
     bookingFormSubmitText[-1] = "Create draft booking";
     bookingFormSubmitText[0]  = "Send booking to Keiron";
@@ -536,7 +547,7 @@ if (login_valid())
         console.log(JSON_response);
 
         if (JSON_response.status == "success") {
-          modalUpdate(booking_id, JSON_response.booking_status, JSON_response.booking_date, JSON_response.booking_time, JSON_response.booking_name, JSON_response.booking_location, JSON_response.booking_ensemble_id, accept_reject);
+          modalUpdate(booking_id, JSON_response.booking_status, JSON_response.booking_date, JSON_response.booking_time, JSON_response.booking_name.decodeHTML(), JSON_response.booking_location.decodeHTML(), JSON_response.booking_ensemble_id, accept_reject);
         }
         else {
           modalError(status, JSON_response.error_message);
@@ -637,7 +648,7 @@ if (login_valid())
                                 <label class="form-label required">Ensemble</label>
                                 <select class="form-select" name="ensemble-id" id="ensemble-id" required>
                                   <?php
-                                    $ensembles_query = $db_connection->prepare("SELECT * FROM logins WHERE `is_ensemble` = 1 ORDER BY `name` ASC");
+                                    $ensembles_query = $db_connection->prepare("SELECT * FROM logins WHERE `is_ensemble` = 1 OR `user_level` = 2 ORDER BY `name` ASC");
                                     $ensembles_query->execute();
                                     $ensembles_result = $ensembles_query->get_result();
 
