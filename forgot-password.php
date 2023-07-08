@@ -30,9 +30,9 @@
         xhttp.timeout = 10000;
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
-        var emailField = encodeURIComponent(document.getElementById("emailField").value);
+        var usernameField = encodeURIComponent(document.getElementById("usernameField").value);
 
-        xhttp.send("email=" + emailField);
+        xhttp.send("username=" + usernameField);
 
         xhttp.onload = function() {
           if (xhttp.status == 200) {
@@ -68,10 +68,10 @@
         <div class="card card-md" autocomplete="off">
           <div class="card-body">
             <h2 class="card-title text-center mb-4">Forgot password</h2>
-            <p class="text-muted mb-4">Enter your email address and your password will be reset and emailed to you.</p>
+            <p class="text-muted mb-4">Enter your username and your password will be reset and emailed to you.</p>
             <div class="mb-3">
-              <label class="form-label">Email address</label>
-              <input type="email" id="emailField" name="emailField" class="form-control" placeholder="Enter email">
+              <label class="form-label">Username</label>
+              <input type="text" id="usernameField" name="usernameField" class="form-control" placeholder="Enter username">
             </div>
             <div class="mb-2" id="send-new-password-error">
                   

@@ -349,9 +349,7 @@ if (login_valid())
         document.getElementById("add-booking-title") .innerHTML = bookingFormSubmitText[booking_status];
 
         document.getElementById("booking-date").disabled = true;
-        document.getElementById("booking-time").disabled = true;
         document.getElementById("booking-date-end").disabled = true;
-        document.getElementById("booking-time-end").disabled = true;
         document.getElementById("ensemble-id").disabled  = true;
 
         document.getElementById("booking-status-new").value = parseInt(booking_status) + 1;

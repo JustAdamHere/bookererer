@@ -27,7 +27,7 @@
     $ensemble = $ensemble_query->get_result()->fetch_assoc();
     $ensemble_name = $ensemble["name"];
     $ensemble_logo = $ensemble["logo"];
-    $ensemble_email = $ensemble["email"];
+    $ensemble_emails = explode(',', $ensemble["email"]);
 
     $subject = "Update to booking: ".$booking["name"];
     $message = create_email($booking, $ensemble_name);
@@ -48,33 +48,51 @@
 
       switch ($booking["status"]) {
         case 0:
-          $mail->addAddress($ensemble_email);
-          $mail->addCC     ($keiron_email);
+          foreach ($ensemble_emails as $email)
+          {
+            $mail->addAddress($email);
+          }
+          $mail->addCC($keiron_email);
           break;
   
         case 1:
           $mail->addAddress($keiron_email);
-          $mail->addCC     ($ensemble_email);
+          foreach ($ensemble_emails as $email)
+          {
+            $mail->addCC($email);
+          }
           break;
   
         case 2:
           $mail->addAddress($keiron_email);
-          $mail->addCC     ($ensemble_email);
+          foreach ($ensemble_emails as $email)
+          {
+            $mail->addCC($email);
+          }
           break;
   
         case 3:
-          $mail->addAddress($ensemble_email);
-          $mail->addCC     ($keiron_email);
+          foreach ($ensemble_emails as $email)
+          {
+            $mail->addAddress($email);
+          }
+          $mail->addCC($keiron_email);
           break;
       
         case 4:
           $mail->addAddress($keiron_email);
-          $mail->addCC     ($ensemble_email);
+          foreach ($ensemble_emails as $email)
+          {
+            $mail->addCC($email);
+          }
           break;
   
         case 5:
           $mail->addAddress($keiron_email);
-          $mail->addCC     ($ensemble_email);
+          foreach ($ensemble_emails as $email)
+          {
+            $mail->addCC($email);
+          }
           break;
       }
 

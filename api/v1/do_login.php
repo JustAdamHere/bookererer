@@ -1,13 +1,13 @@
 <?php
-	$email    = strip_tags($_POST["email"]);
+	$username = strip_tags($_POST["username"]);
 	$password = strip_tags($_POST["password"]);
 
 	$JSON_response = new stdClass();
 
-	if (!isset($_POST["email"]))
+	if (!isset($_POST["username"]))
 	{
 		$JSON_response->status        = "error";	
-		$JSON_response->error_message = "missing email address.";
+		$JSON_response->error_message = "missing username address.";
 	}
 	elseif (!isset($_POST["password"]))
 	{
@@ -19,7 +19,7 @@
 		include($_SERVER['DOCUMENT_ROOT']."/includes/db_connect.php");
 		$db_connection = db_connect();
 
-		$select_query = $db_connection->query("SELECT `password`, `ID` FROM `logins` WHERE `email` = '".$email."' LIMIT 1");
+		$select_query = $db_connection->query("SELECT `password`, `ID` FROM `logins` WHERE `username` = '".$username."' LIMIT 1");
 
 		if ($select_query->num_rows == 1)
 		{
@@ -59,7 +59,7 @@
 		elseif ($select_query->num_rows == 0)
 		{
 			$JSON_response->status        = "error";	
-			$JSON_response->error_message = "unknown email address: ".$_POST["email"];
+			$JSON_response->error_message = "unknown username: ".$_POST["username"];
 		}
 		else
 		{

@@ -342,7 +342,7 @@
 			$mail->SMTPDebug = 0;
 
 			$mail->setFrom($config["email_from"], $config["software_name"]);
-			foreach (explode(", ", $to) as $address)
+			foreach (explode(",", $to) as $address)
 			{
 				$mail->addAddress($address);
 			}
@@ -370,25 +370,26 @@
 		}
 	}
 
-	$email = strip_tags($_POST["email"]);
+	$username = strip_tags($_POST["username"]);
 
 	$JSON_response = new stdClass();
 
-	if ($email != "")
+	if ($username != "")
 	{
 		include($_SERVER['DOCUMENT_ROOT']."/includes/db_connect.php");
 		$db_connection = db_connect();
 
-		$email_query = $db_connection->query("SELECT `ID` FROM `logins` WHERE `email`='".$email."' ORDER BY ID ASC LIMIT 1");
+		$username_query = $db_connection->query("SELECT `ID`, `email` FROM `logins` WHERE `username`='".$username."' ORDER BY ID ASC LIMIT 1");
 
-		if ($email_query->num_rows == 0)
+		if ($username_query->num_rows == 0)
 		{
 			$JSON_response->status        = "error";
-			$JSON_response->error_message = "no such email address: ".$email;
+			$JSON_response->error_message = "no such username: ".$username;
 		}
 		else
 		{
-			$login_ID = $email_query->fetch_assoc()["ID"];
+			$user_details = $username_query->fetch_assoc();
+			$login_ID = $user_details["ID"];
 			$token = $db_connection->query("SELECT UUID()")->fetch_array()[0];
 
 			$current_timestamp = time();
@@ -399,7 +400,7 @@
 
 			if ($token_query)
 			{
-				$send_email_result = send_token_email($token, $email);
+				$send_email_result = send_token_email($token, $user_details['email']);
 
 				if($send_email_result === true)
 				{
@@ -409,7 +410,7 @@
 				{
 					$JSON_response->status        = "error";
 					$JSON_response->error_message = "failed to send token email: ".$send_email_result;
-				}
+				}	
 			}
 			else
 			{

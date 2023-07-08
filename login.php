@@ -80,10 +80,10 @@
             xhttp.open("POST", "<?=$config['base_url'];?>/api/v1/do_login.php", true);
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
-            var emailField    = encodeURIComponent(document.getElementById("emailField").value);
+            var usernameField = encodeURIComponent(document.getElementById("usernameField").value);
             var passwordField = encodeURIComponent(document.getElementById("passwordField").value);
 
-            xhttp.send("email=" + emailField + "&password=" + passwordField);
+            xhttp.send("username=" + usernameField + "&password=" + passwordField);
 
             xhttp.onload = function() {
               if (xhttp.status == 200) {
@@ -120,7 +120,7 @@
                 <h2 class="card-title text-center mb-4">Login to your account</h2>
                 <div class="mb-3">
                   <label class="form-label">Username</label>
-                  <input type="text" class="form-control" id="emailField" placeholder="Enter username" tabindex="1">
+                  <input type="text" class="form-control" id="usernameField" placeholder="Enter username" tabindex="1">
                 </div>
                 <div class="mb-2">
                   <label class="form-label">
