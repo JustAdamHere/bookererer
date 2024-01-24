@@ -9102,7 +9102,7 @@ function booking_restricted($booking_ensemble, $status)
   {
     return true;
   }
-  elseif ($current_user_level == 2 && $status == 1)
+  elseif (($current_user_level == 2 && $status == 1) || ($current_user_id == $booking_ensemble))
   {
     return true;
   }
